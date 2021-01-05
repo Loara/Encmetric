@@ -6,3 +6,11 @@ Encmetric is written under the GNU Lesser General Public License (LGPL). For mor
 
 # Build and Install
 To build the library you need cmake version 3.19 or later.
+
+To build and install the library
+
+    cmake src/
+    cmake --build .
+    cmake --install .
+
+to build also the test executable turn on the option ```BUILD_TEST``` in cmake.
