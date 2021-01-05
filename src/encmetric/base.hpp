@@ -16,11 +16,18 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Encmetric. If not, see <http://www.gnu.org/licenses/>.
 */
+
+/*
+    Base definitions
+*/
 #include <cstdint>
 #include <encmetric/byte_tools.hpp>
 
 namespace adv{
-using unicode = std::uint_least32_t;//non serve che abbia la stessa dimensione
+using unicode = std::uint_least32_t;
+/*
+    UNICODE needs only 4 bytes to store bytes
+*/
 inline constexpr int max_char_byte = 4;
 inline constexpr unicode BOM = 0xFEFF;
 

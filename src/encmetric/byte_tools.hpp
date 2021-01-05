@@ -16,6 +16,9 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Encmetric. If not, see <http://www.gnu.org/licenses/>.
 */
+/*
+    Some usebul bitwise operations using bitmasks that can be built at compile-time
+*/
 #include <cstddef>
 #include <cstring>
 #include <type_traits>
@@ -28,6 +31,11 @@ inline bool compare(const byte *a, const byte *b, int nsiz) noexcept{
 	return std::memcmp(a, b, nsiz) == 0;
 }
 
+/*
+    Create a bit mask of type RET with ones at positions oth.
+
+    For example compose_bit_mask<int>(1, 4, 3) returns 26=11010b as an int 
+*/
 template<typename RET, typename IntegerType>
 constexpr RET compose_bit_mask(IntegerType bit){
 	static_assert(std::is_integral_v<IntegerType>, "Not integral type");
@@ -42,16 +50,15 @@ constexpr RET compose_bit_mask(IntegerType bit, T... oth){
 }
 
 /*
-true if all the selected bits are 0
+    Bit testing operations using bitmasks:
+     - bit_zero return true when test has all zeroes at the positions all 
+     - bit_one return true when test has all ones at the positions all 
 */
 template<typename B, typename... T>
 constexpr bool bit_zero(B test, T... all){
 	return (test & compose_bit_mask<B>(all...)) == B{0};
 }
 
-/*
-true if all the selected bits are 1
-*/
 template<typename B, typename... T>
 constexpr bool bit_one(B test, T... all){
 	B mask = compose_bit_mask<B>(all...);
@@ -59,31 +66,28 @@ constexpr bool bit_one(B test, T... all){
 }
 
 /*
-sets these bits
+    Set/reset the specified bits:
+     - set_bits sets these bits
+     - reset_bits resets these bits
+     - leave_bits resets all the remaining bits leaving the remaining unchanged
 */
 template<typename B, typename... T>
 constexpr void set_bits(B &mask, T... all){
 	mask |= compose_bit_mask<B>(all...);
 }
 
-/*
-resets these bits
-*/
 template<typename B, typename... T>
 constexpr void reset_bits(B &mask, T... all){
 	mask &= ~compose_bit_mask<B>(all...);
 }
 
-/*
-resets all other bits
-*/
 template<typename B, typename... T>
 constexpr void leave_bits(B &mask, T... all){
 	mask &= compose_bit_mask<B>(all...);
 }
 
 /*
-access an endianess-dependend arrays as a big endian array
+    access an endianess-dependend arrays as a big endian array
 */
 
 inline constexpr int acc(bool be, int dim, int i){
@@ -93,8 +97,11 @@ inline constexpr int acc(bool be, int dim, int i){
 template<typename T>
 constexpr T& access(T *by, bool be, int dim, int i){ return by[acc(be, dim, i)];}
 
-// trasforma un array di len byte che memorizza (len/dim) numeri con endianess be in un altro con endianess big endian. 
-//Viceversa applicato ad un array big endian lo trasforma in un array con endianess be
+/*
+    Copy an array in with length len in array out with length len
+    The array in is threaten as if vas composed of (len/dim) items each of dimension dim
+    if be=false each item is copied in reverse order.
+*/
 inline constexpr void copy_end(const byte *in, int len, bool be, byte *out, int dim){
 	if((len % dim) != 0)
 		return;

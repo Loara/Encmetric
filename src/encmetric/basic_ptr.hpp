@@ -22,8 +22,7 @@
 namespace adv{
 
 /*
-Un container per i puntatori che devono essere costruiti ed eliminati tramite un allocatore
-Utile nei costruttori delle classi, dove c'è il rischio di non deallocare la memoria inutilizzata
+    A basic unique_ptr that uses Allocator
 */
 template<typename T, typename U>
 class basic_ptr{
