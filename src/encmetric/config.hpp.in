@@ -17,6 +17,10 @@
     along with Encmetric. If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+    Defines system-dependant constants
+*/
+
 #cmakedefine WIN32
 
 namespace adv{
