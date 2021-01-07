@@ -1,6 +1,10 @@
 # Encmetric
 C++ library to manage different encoding strings
 
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/Loara/Encmetric?color=brightgreen)
+![GitHub](https://img.shields.io/github/license/Loara/Encmetric?color=blue&label=License&style=plastic)
+![GitHub top language](https://img.shields.io/github/languages/top/Loara/Encmetric?color=blue)
+
 # License
 Encmetric is written under the GNU Lesser General Public License (LGPL). For more informations see COPYING and COPYING.LESSER files
 
