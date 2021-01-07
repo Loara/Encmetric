@@ -7,7 +7,7 @@
 C++ library to manage different encoding strings
 
 # License
-Encmetric is written under the GNU Lesser General Public License (LGPL). For more informations see COPYING and COPYING.LESSER files
+Encmetric is written under the GNU Lesser General Public License (LGPL) version 3.0. For more informations see COPYING and COPYING.LESSER files
 
 # Build and Install
 To build the library you need cmake version 3.19 or later and a C++17 compiler.
