@@ -16,26 +16,34 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Encmetric. If not, see <http://www.gnu.org/licenses/>.
 */
+/*
+    Pointers to encoded string types.
+
+    We don't use a generic const byte * to point the string, instead we use an
+    encoding-dependent class in order to simplify the char-length operations
+*/
+/*
+    Remember that
+    - length = number of characters
+    - size = number of bytes
+*/
 #include <type_traits>
 #include <typeindex>
 #include <cstddef>
 #include <encmetric/encoding.hpp>
 
 namespace adv{
+
 /*
-L'unità di misura non è più il char/byte, ma tchar_pt e saranno puntatori al carattere dato che possiedono lunghezza variabile.
-
-il parametro template deve essere la classe che lo deriva
-
-size = numero di byte
-len = numero di caratteri
+    Base class of all pointer-type operations
 */
-
 template<typename U, typename B>
 class base_tchar_pt{
 	private:
 		using data_type = B;
-
+		/*
+		    Static cast operations
+		*/
 		U* mycast() noexcept {return static_cast<U*>(this);}
 		U& instance() noexcept {return *(mycast());}
 		const U* mycast() const noexcept {return static_cast<const U*>(this);}
@@ -46,18 +54,31 @@ class base_tchar_pt{
 		data_type *ptr;
 		explicit base_tchar_pt(data_type *b) : ptr{b} {}
 	public:
+		/*
+		    Raw pointer
+		*/
 		data_type *data() const {return ptr;}
+		/*
+		    Informations about relative EncMetric
+		*/
 		int b_unity() const noexcept {return mycast()->unity();}
 		int b_chLen() const {return mycast()->chLen();}
 		bool b_validChar(int &chsiz) const noexcept {return mycast()->validChar(chsiz);}
 		int b_to_unicode(unicode &uni, int l) const {return mycast()->to_unicode(uni, l);}
 		bool b_terminate() const{return mycast()->terminate();}
-
+		/*
+		    Step the pointer by 1 character, returns the number og bytes skipped
+		*/
 		int next(){
 			int add = b_chLen();
 			ptr += add;
 			return add;
 		}
+		/*
+		    Validate the first character, then skip it
+
+		    rsiz is the number of bytes of ptr, it will be updated
+		*/
 		bool valid_next(int &rsiz) noexcept{
 			if(b_unity() > rsiz)
 				return false;
@@ -68,22 +89,41 @@ class base_tchar_pt{
 			ptr += dec;
 			return true;
 		}
+		/*
+		    Test if is a null string
+		*/
 		bool isNull() const {return ptr == nullptr;}
-
+		/*
+		    Access ptr as a byte array
+		*/
 		data_type &operator[](int i) const {return ptr[i];}
+		/*
+		    Increase ptr by i bytes (not characters)
+		*/
 		U operator+(std::ptrdiff_t i) const{
 			if(i <= 0)
 				return instance();
 			else
 				return p_new_instance(ptr + i);
 		}
+		/*
+		    Steps this by 1 character
+		*/
 		U& operator++(){
 			next();
 			return instance();
 		}
+		/*
+		    Difference of pointers in bytes
+		*/
 		std::ptrdiff_t operator-(const U &oth) const noexcept{
 			return ptr - oth.data();
 		}
+		/*
+		    Steps this by times character
+		    
+		    Use this function instead of operator+
+		*/
 		U& add(int times){
 			if(times > 0){
 				int add = b_chLen(times);
@@ -91,14 +131,16 @@ class base_tchar_pt{
 			}
 			return instance();
 		}
+		/*
+		    Compairson
+		*/
 		bool operator==(const U &it) const {return ptr == it.data();}
 		bool operator!=(const U &oth) const {return ptr != oth.data();}
 
 		/*
-			fissati due puntatori base e newbase ritorna ret in modo tale che
-			ret.ptr-newbase = *this.ptr - base
+		    Let two pointers base e newbase returns ret so that
 
-			utile quando si effettuano riallocazioni di memoria
+		    ret.ptr-newbase = *this.ptr - base
 		*/
 		U transfer_to(data_type *base, data_type *newbase) const noexcept{
 			data_type *newww = newbase + (ptr - base);
@@ -106,6 +148,9 @@ class base_tchar_pt{
 		}		
 };
 
+/*
+    Adds the funstion wrapper from_unicode for rw pointers
+*/
 template<typename U>
 class wbase_tchar_pt : public base_tchar_pt<U, byte>{
 	public:
@@ -114,18 +159,22 @@ class wbase_tchar_pt : public base_tchar_pt<U, byte>{
 		int b_from_unicode(unicode uni, int l) const {return this->mycast()->from_unicode(uni, l);}
 };
 
-//--------
+/*
+    Standard implementations
 
+    WIDENC implementation have also a EncMetric *f field (usually a dyn_encoding instance)
+    in order to retrieve encoding dynamically
+*/
 template<typename T>
 class const_tchar_pt : public base_tchar_pt<const_tchar_pt<T>, byte const>{
 	public:
-		using static_format = T;
+		using static_enc = T;
 
 		explicit const_tchar_pt() : base_tchar_pt<const_tchar_pt<T>, byte const>{nullptr} {}
 		explicit const_tchar_pt(const byte *c) : base_tchar_pt<const_tchar_pt<T>, byte const>{c} {}
 		explicit const_tchar_pt(const char *c) : const_tchar_pt{(const byte *)c} {}
 
-		const EncMetric &format() const noexcept {return static_format::instance();}
+		const EncMetric &format() const noexcept {return static_enc::instance();}
 		int unity() const noexcept {return T::unity();}
 		int chLen() const {return T::chLen(this->ptr);}
 		bool validChar(int &chsiz) const noexcept {return T::validChar(this->ptr, chsiz);}
@@ -141,7 +190,7 @@ class const_tchar_pt<WIDENC> : public base_tchar_pt<const_tchar_pt<WIDENC>, byte
 	private:
 		const EncMetric *f;
 	public:
-		using static_format = WIDENC;
+		using static_enc = WIDENC;
 
 		explicit const_tchar_pt(const EncMetric &rf) : base_tchar_pt<const_tchar_pt<WIDENC>, byte const>{nullptr}, f{&rf} {}
 		explicit const_tchar_pt(const byte *c, const EncMetric &rf) : base_tchar_pt<const_tchar_pt<WIDENC>, byte const>{c}, f{&rf} {}

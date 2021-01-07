@@ -120,14 +120,14 @@ struct em_traits{
 template<typename T, enable_not_widenc_t<T, int> =0>
 class dyn_encoding : public EncMetric{
 	public:
-		using static_format = T;
+		using static_enc = T;
 
 		dyn_encoding() {}
 		~dyn_encoding() {}
 
-		int d_unity() const noexcept {return static_format::unity();}
-		int d_chLen(const byte *b) const {return static_format::chLen(b);}
-		bool d_validChar(const byte *b, int &chlen) const noexcept {return static_format::validChar(b, chlen);}
+		int d_unity() const noexcept {return static_enc::unity();}
+		int d_chLen(const byte *b) const {return static_enc::chLen(b);}
+		bool d_validChar(const byte *b, int &chlen) const noexcept {return static_enc::validChar(b, chlen);}
 		std::type_index index() const noexcept {return em_traits<T>::index();}
 
 		//dato che le funzioni unicode sono opzionali servono le strutture di supporto

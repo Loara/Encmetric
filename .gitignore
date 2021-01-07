@@ -3,6 +3,7 @@
 *.so
 *.o
 *.lib
+a.out
 
 CMakeLists.txt.user
 CMakeCache.txt
