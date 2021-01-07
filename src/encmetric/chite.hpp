@@ -174,7 +174,7 @@ class const_tchar_pt : public base_tchar_pt<const_tchar_pt<T>, byte const>{
 		explicit const_tchar_pt(const byte *c) : base_tchar_pt<const_tchar_pt<T>, byte const>{c} {}
 		explicit const_tchar_pt(const char *c) : const_tchar_pt{(const byte *)c} {}
 
-		const EncMetric &format() const noexcept {return static_enc::instance();}
+		const EncMetric &format() const noexcept {return dyn_encoding<T>::instance();}
 		int unity() const noexcept {return T::unity();}
 		int chLen() const {return T::chLen(this->ptr);}
 		bool validChar(int &chsiz) const noexcept {return T::validChar(this->ptr, chsiz);}
