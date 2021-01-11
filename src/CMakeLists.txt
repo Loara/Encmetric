@@ -19,7 +19,7 @@ configure_file(encmetric/config.hpp.in encmetric/config.hpp)
 file(GLOB headers LIST_DIRECTORIES false "encmetric/*.hpp")
 file(GLOB t_headers LIST_DIRECTORIES false "encmetric/*.tpp")
 
-add_library(encmetric encoding.cpp utf8_enc.cpp)
+add_library(encmetric encoding.cpp utf8_enc.cpp enc_strings.cpp)
 
 #headers
 target_include_directories(encmetric PUBLIC "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")

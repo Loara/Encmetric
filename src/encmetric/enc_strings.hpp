@@ -30,6 +30,15 @@ inline constexpr bool bend = false;
 //encoding per IO del sistema
 using IOenc = std::conditional_t<is_windows(), UTF16<bend>, UTF8>;
 
+//explicit declaration of template - for compilation improvment
+#ifndef encmetric_library
+extern template class tchar_pt<CENC>;
+extern template class const_tchar_pt<CENC>;
+extern template class adv_string_view<CENC>;
+extern template class adv_string<CENC>;
+#endif
+
+//better names
 using achar_pt = tchar_pt<CENC>;
 using c_achar_pt = const_tchar_pt<CENC>;
 using astr_view = adv_string_view<CENC>;
