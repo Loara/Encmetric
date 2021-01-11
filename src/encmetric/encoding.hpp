@@ -16,6 +16,24 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Encmetric. If not, see <http://www.gnu.org/licenses/>.
 */
+/*
+    Encoding Metrics classes, with some useful base classes.
+
+    Any implementation of an Encoding Metric must have these function member declared as 
+    static:
+
+     - int unity() noexcept  => minimum number of bytes needed to detect the length of a character
+     - int chLen(const byte *)  => the length in bytes of the first character pointed by (can throw
+        an encoding_error if the length can't be recognized). The first purpouse of this function
+        is only to calculate le length of a character, not to verify it.
+     - bool validChar(const byte *, int &) noexcept  => Test is the first character is valid with 
+        respect to this encoding. This function sets also the character length in the second argument if
+        it is valid (if the character is not valid the status of this argument is undefined).
+
+    Optional functions, also defined as static:
+ 
+     - int d_to_unicode(unicode &, const byte *, int)  => 
+*/
 #include <encmetric/base.hpp>
 #include <typeindex>
 #include <type_traits>
