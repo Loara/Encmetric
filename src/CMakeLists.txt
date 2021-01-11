@@ -6,6 +6,13 @@ project(encmetric VERSION 1.0.2 DESCRIPTION "Library to manage encoded strings" 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+#windows test
+if(CMAKE_SYSTEM_NAME MATCHES Win)
+	set(using_windows ON)
+else()
+	set(using_windows OFF)
+endif()  
+
 configure_file(encmetric/config.hpp.in encmetric/config.hpp)
 
 #Riunisce file headers
