@@ -28,18 +28,8 @@
 #include <encmetric/basic_ptr.hpp>
 
 namespace adv{
-
-/*
-si ferma al primo carattere (non byte) nullo
-Può lanciare eccezioni
-*/
 template<typename T>
 void deduce_lens(const_tchar_pt<T>, int &len, int &siz);
-
-/*
-rsiz è la lunghezza massima del buffer
-zero dice se fermarsi al primo carattere nullo (senza includerlo)
-*/
 template<typename T>
 void deduce_lens(const_tchar_pt<T>, int rsiz, bool zero, int &len, int &siz);
 
@@ -49,20 +39,21 @@ class adv_string; //forward declaration
 template<typename T>
 class adv_string_view{
 	private:
-		int len;
-		int siz;//bytes
+		int len;//character number
+		int siz;//bytes number
 		const_tchar_pt<T> ptr;
 	protected:
 		explicit adv_string_view(int length, int size, const_tchar_pt<T> bin) noexcept : ptr{bin}, len{length}, siz{size} {}
 	public:
 		explicit adv_string_view(const_tchar_pt<T>);
 		explicit adv_string_view(const_tchar_pt<T>, int dim, bool dim_is_size);//true=size, false=length
-		explicit adv_string_view(const_tchar_pt<T>, int siz, int len);//legge esattamente len caratteri, se supera siz da errore
+		/*
+		    read exactly len characters and siz bytes. If these values doesn't match trow error
+		*/
+		explicit adv_string_view(const_tchar_pt<T>, int siz, int len);
 		virtual ~adv_string_view() {}
 		/*
-		FORTEMENTE CONSIGLIATO chiamare almeno una delle due funzioni seguenti prima di processare i dati di un utente.
-
-		l'algoritmo per determinare la lunghezza della stringa è improntato all'efficienza, non alla correttezza della stessa, e quindi potrebbero essere nascosti errori potenzialmente fatali e vulnerabilità.
+		    Verify the string is correctly encoded
 		*/
 		void verify() const;
 		bool verify_safe() const noexcept;
@@ -72,11 +63,11 @@ class adv_string_view{
 		adv_string_view<T> substring(int b) const {return substring(b, 0, true);}
 		int length() const noexcept {return len;}
 		int size() const noexcept {return siz;}
-		int size(int a, int n) const;//byte dei primi n caratteri a partire da a
+		int size(int a, int n) const;//bytes of first n character starting from the (a+1)-st character
 		int size(int n) const {return size(0, n);}
 
 		template<typename S>
-		bool compstr(const adv_string_view<S> &, int) const;//compara solamente i primi n caratteri
+		bool compstr(const adv_string_view<S> &, int) const;//compare only the first n character
 
 		template<typename S>
 		bool operator==(const adv_string_view<S> &) const;
@@ -91,10 +82,10 @@ class adv_string_view{
 		bool operator!=(const_tchar_pt<S> bin) const {return !(*this == bin);}
 
 		template<typename S>
-		int bytesOf(const adv_string_view<S> &) const;//ritorna quanti byte dall'inizio ci sono prima della prima occorrenza, -1 se non compare
+		int bytesOf(const adv_string_view<S> &) const;
 
 		template<typename S>
-		int indexOf(const adv_string_view<S> &) const;//stessa cosa ma ritorna il numero di lettere
+		int indexOf(const adv_string_view<S> &) const;
 
 		template<typename S>
 		bool containsChar(const_tchar_pt<S>) const;
@@ -116,7 +107,6 @@ class adv_string_view{
 		template<typename S, typename U = std::allocator<byte>>
 		adv_string<T, U> concatenate(const adv_string_view<S> &, const U & = U{}) const;
 
-	//friend std::ostream &operator<<(std::ostream &, const utfstring &);
 	template<typename W, typename S>
 	friend adv_string_view<W> convert(const adv_string_view<S> &);
 };
@@ -142,13 +132,8 @@ class adv_string : public adv_string_view<T>{
 		basic_ptr<byte, U> bind;
 
 		adv_string(const_tchar_pt<T>, int, int, basic_ptr<byte, U>);
-		/*
-		il const_str_pointer qui non serve tanto per la memoria che punta, quanto per il formato. La memoria viene data dal basic_ptr
-		*/
 		adv_string(basic_ptr<byte, U>, const_tchar_pt<T>, int, int);
-		//adv_string(basic_ptr<byte, U>, const_tchar_pt<T>, bool);
 	public:
-		//adv_string(const_tchar_pt<T> b, int dim, bool dim_is_siz, const U & = U{});
 		adv_string(const adv_string_view<T> &, const U & = U{});
 		adv_string(const adv_string<T> &me) : adv_string{static_cast<const adv_string_view<T> &>(me), me.get_allocator()} {}
 		adv_string(adv_string &&st) noexcept =default; 
@@ -164,10 +149,10 @@ adv_string<S, U> operator+(const adv_string<S, U> &a, const adv_string<T, U> &b)
 	return a.template concatenate<T, U>(b);
 }
 
-using w_string_view = adv_string_view<WIDENC>;
+using wstr_view = adv_string_view<WIDENC>;
 
 template<typename U = std::allocator<byte>>
-using w_string = adv_string<WIDENC, U>;
+using wstr = adv_string<WIDENC, U>;
 
 
 #include <encmetric/utf_string.tpp>

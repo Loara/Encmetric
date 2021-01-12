@@ -262,41 +262,46 @@ class tchar_pt<WIDENC> : public wbase_tchar_pt<tchar_pt<WIDENC>>{
 		tchar_pt<WIDENC> new_instance(char *c) const{return tchar_pt<WIDENC>{c, *f};}
 };
 
-//-----
+//---------------------------------------------
 
-//altre funzioni
-
+/*
+    Test if the pointers have the same encoding (if one of them has WIDENC encoding then control the f field)
+*/
 template<typename S, typename T>
 bool sameEnc(const const_tchar_pt<S> &, const const_tchar_pt<T> &);
-/*
-Usata per tutti quei tipi che possono essere convertiti in un const_str_pointer
-*/
 template<typename T1, typename T2>
 bool sameEnc(const T1 &arg1, const T2 &arg2){
 	return sameEnc(const_tchar_pt<typename T1::static_enc>{arg1}, const_tchar_pt<typename T2::static_enc>{arg2});
 }
-
 template<typename S, typename T, typename... Rarg>
-bool sameEnc(const const_tchar_pt<S> &f1, const const_tchar_pt<T> &f2, const const_tchar_pt<Rarg> &... far)
-{return sameEnc(f2, far...) && sameEnc(f1, f2);}
+bool sameEnc(const S &f1, const T &f2, const Rarg &... far){
+	return sameEnc(f2, far...) && sameEnc(f1, f2);
+}
+/*
+template<typename S, typename T, typename... Rarg>
+bool sameEnc(const const_tchar_pt<S> &f1, const const_tchar_pt<T> &f2, const const_tchar_pt<Rarg> &... far){
+	return sameEnc(f2, far...) && sameEnc(f1, f2);
+}
+*/
 
+/*
+    Return a new pointer pointing to the same array and with the same encoding, but with possible different template parameter.
+*/
 template<typename S, typename T>
 tchar_pt<S> convert(tchar_pt<T> p);
-
 template<typename S, typename T>
 const_tchar_pt<S> convert(const_tchar_pt<T> p);
 
 /*
-Funzione base per effettuare l'EncMetric di un solo carattere. Semplicemente prima si ricava il codice unicode e poi lo riconverte nel nuovo formato
-
-Nota: non controlla che abbiano già lo stesso EncMetric
+    Make an encoding conversion between Unicode-compatible encodings using from_unicode and to_unicode functions.
 */
 template<typename S, typename T>
 void basic_encoding_conversion(const_tchar_pt<T> in, int inlen, tchar_pt<S> out, int oulen);
 template<typename S, typename T>
 void basic_encoding_conversion(const_tchar_pt<T> in, int inlen, tchar_pt<S> out, int oulen, int &inread, int &outwrite);
 
-using w_st_pt = const_tchar_pt<WIDENC>;
+using c_wchar_pt = const_tchar_pt<WIDENC>;
+using wchar_pt = tchar_pt<WIDENC>;
 
 #include <encmetric/chite.tpp>
 }

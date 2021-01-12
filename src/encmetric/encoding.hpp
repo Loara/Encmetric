@@ -32,7 +32,11 @@
 
     Optional functions, also defined as static:
  
-     - int d_to_unicode(unicode &, const byte *, int)  => 
+     - int to_unicode(unicode &, const byte *, int)  => sets the Unicode code of the first encoded characters
+     - int from_unicode(unicode , byte *, int)  => encode the Unicode character and writes it in the memory pointed
+
+     Both have a integer parameter that represents the size of the string/buffer, and returns the nunber of bytes
+     read/written. If the string parameter in to_unicode is too small return 0 without throw an exception 
 */
 #include <encmetric/base.hpp>
 #include <typeindex>
@@ -61,18 +65,17 @@ class encoding_error : public std::exception{
 class EncMetric{
 	public:
 		virtual ~EncMetric() {}
-		virtual int d_unity() const noexcept=0;//minimo numero di byte di un carattere
+		virtual int d_unity() const noexcept=0;
 		virtual int d_chLen(const byte *) const=0;
 		virtual bool d_validChar(const byte *, int &chlen) const noexcept =0;
-		/*
-		questi metodi possono non essere implementati, sono opzionali
-		*/
 		virtual int d_to_unicode(unicode &, const byte *, int) const =0;
-		//Se non ci sono byte sufficienti per scrivere ritorna 0 e non lancia una eccezione
 		virtual int d_from_unicode(unicode, byte *, int) const =0;
 		virtual std::type_index index() const noexcept=0;
 };
 
+/*
+    Placeholder: the encoding is determined at runtime
+*/
 class WIDENC{};
 
 class RAW{
@@ -103,7 +106,12 @@ using enable_widenc_t = typename enable_widenc<T, U>::type;
 template<typename T, typename U>
 using enable_not_widenc_t = typename enable_not_widenc<T, U>::type;
 
-// strutture per testare l'esistenza delle funzioni di conversione unicode
+/*
+    Struct to test if the encoding class has conversion functions to/from Unicode (for example RAW haven't them)
+
+    You should use this wrap struct instead of calling directly, otherwise your functions won't be compiled 
+    with the RAW encoding or another encoding incompatible with Unicode..
+*/
 template<typename T, typename = void>
 struct has_unicode_tf{
 	static int go(unicode &, const byte *, int) {throw encoding_error("Unsupported Unicode conversion");}
@@ -124,9 +132,6 @@ struct has_unicode_ff<T, std::void_t<decltype(static_cast<int(*)(unicode, byte *
 	static int go(unicode a, byte *b, int c) {return T::from_unicode(a, b, c);}
 };
 
-/*
-Si deve usare sempre questa classe quando si accedono alle funzioni Unicode, dato che potrebbero non essere definite.
-*/
 template<typename T, enable_not_widenc_t<T, int> =0>
 struct em_traits{
 	static int to_unicode(unicode &a, const byte *b, int c)  {return has_unicode_tf<T>::go(a, b, c);}
@@ -134,7 +139,9 @@ struct em_traits{
 	static std::type_index index() noexcept {return std::type_index{typeid(T)};}
 };
 //-------------------
-
+/*
+    Wrapper of an encoding T in order to save it in a class field of WIDENC classes
+*/
 template<typename T, enable_not_widenc_t<T, int> =0>
 class dyn_encoding : public EncMetric{
 	public:
@@ -159,7 +166,7 @@ class dyn_encoding : public EncMetric{
 };
 
 template<typename T>
-void assert_raw(){static_assert(!is_raw_v<T>, "Using RAW format");}
+constexpr void assert_raw(){static_assert(!is_raw_v<T>, "Using RAW format");}
 
 inline void assert_raw(const EncMetric &f){
 	if(f.index() == em_traits<RAW>::index())
@@ -167,7 +174,7 @@ inline void assert_raw(const EncMetric &f){
 }
 
 /*
-Quando non si conosce l'encoding di una stringa NON usare ASCII o Latin1, si usi piuttosto il formato RAW
+    Some basic encodings
 */
 class ASCII{
 	public:
