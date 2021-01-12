@@ -223,6 +223,7 @@ class tchar_pt : public wbase_tchar_pt<tchar_pt<T>>{
 
 		const_tchar_pt<T> cast() noexcept{ return const_tchar_pt<T>{this->ptr};}
 
+		const EncMetric &format() const noexcept {return dyn_encoding<T>::instance();}
 		int unity() const noexcept {return T::unity();}
 		int chLen() const {return T::chLen(this->ptr);}
 		bool validChar(int &chsiz) const noexcept {return T::validChar(this->ptr, chsiz);}
