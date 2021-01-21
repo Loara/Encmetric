@@ -7,8 +7,10 @@ using namespace adv;
 using atok = Token<CENC>;
 
 int main(){
-	astr_view res = getstring("Ciao ciao   bambino");
+	astr_view res{"Ciao ciao   bambino"};
+	wstr_view rey{"Hi", dyn_encoding<UTF8>::instance()};
 	astr_view del = getstring(" ");
+	astr copy = res;
 	atok t{res};
 	while(!t.eof())
 		std::cout << t.proceed(del) << std::endl;

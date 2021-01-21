@@ -61,47 +61,6 @@ void deduce_lens(const_tchar_pt<T> ptr, int dim, bool issiz, int &len, int &siz)
 		catch(const encoding_error &){}
 	}
 }
-/*
-template<typename S, typename T>
-int bytesOf(const_tchar_pt<S> c, int size, const_tchar_pt<T> sq, int nsiz){
-	if(!sameEnc(c, sq))
-		return -1;
-	if(nsiz == 0)
-		return 0;
-	if(size < nsiz)
-		return -1;
-	int rem = size - nsiz +1;
-	int byt = 0;
-	while(byt < rem){
-		if(compare(c.data(), sq.data(), nsiz)){
-			return byt;
-		}
-		byt += c.next();
-	}
-	return -1;
-}
-
-template<typename S, typename T>
-int indexOf(const_tchar_pt<S> c, int size, const_tchar_pt<T> sq, int nsiz){
-	if(!sameEnc(c, sq))
-		return -1;
-	if(nsiz == 0)
-		return 0;
-	if(size < nsiz)
-		return -1;
-	int rem = size - nsiz +1;
-	int byt = 0;
-	int chr = 0;
-	while(byt < rem){
-		if(compare(c.data(), sq.data(), nsiz)){
-			return chr;
-		}
-		byt += c.next();
-		chr++;
-	}
-	return -1;
-}
-*/
 //-----------------------
 template<typename T>
 adv_string_view<T>::adv_string_view(const_tchar_pt<T> cu) : ptr{cu}, len{0}, siz{0}{
@@ -389,29 +348,20 @@ adv_string<T, U> adv_string_view<T>::concatenate(const adv_string_view<S> &err, 
 template<typename T, typename U>
 adv_string<T, U>::adv_string(const_tchar_pt<T> ptr, int len, int siz, basic_ptr<byte, U> by) : adv_string_view<T>{len, siz, ptr}, bind{std::move(by)} {}
 
-//stavolta ignora la memoria puntata da ptr
+//ignore the memory pointed bu ptr, use the memory pointed by by
 template<typename T, typename U>
-adv_string<T, U>::adv_string(basic_ptr<byte, U> by, const_tchar_pt<T> ptr, int len, int siz) : adv_string_view<T>{len, siz, ptr.new_instance(by.memory)}, bind{std::move(by)} {}
-/*
-template<typename T, typename U>
-adv_string<T, U>::adv_string(basic_ptr<byte, U> by, const_tchar_pt<T> frm, bool stopzero) : 
-	adv_string_view<T>{frm.new_instance(by.memory),
-	 static_cast<int>(by.dimension), stopzero},
-	 bind{std::move(by)} {}
+adv_string<T, U>::adv_string(const_tchar_pt<T> ptr, int len, int siz, basic_ptr<byte, U> by, int ignore) : adv_string_view<T>{len, siz, ptr.new_instance(by.memory)}, bind{std::move(by)} {}
 
 
-template<typename T, typename U>
-adv_string<T, U>::adv_string(const_tchar_pt<T> b, int dim, bool stopzero, const U &alloc) : adv_string{basic_ptr<byte, U>{b.data(), static_cast<std::size_t>(dim), alloc}, b, stopzero} {}
-*/
 template<typename T, typename U>
 adv_string<T, U>::adv_string(const adv_string_view<T> &st, const U &alloc)
-	 : adv_string{basic_ptr<byte, U>{st.begin().data(), (std::size_t)st.size(), alloc}, st.begin(), st.length(), st.size()} {}
+	 : adv_string{st.begin(), st.length(), st.size(), basic_ptr<byte, U>{st.begin().data(), (std::size_t)st.size(), alloc}, 0} {}
 
 template<typename T, typename U>
 adv_string<T, U> adv_string<T, U>::newinstance(const_tchar_pt<T> pt, const U &alloc){
 	int len=0, siz=0;
 	deduce_lens(pt, len, siz);
-	return adv_string<T, U>{basic_ptr<byte, U>{pt.data(), (std::size_t)siz, alloc}, pt, len, siz};
+	return adv_string<T, U>{pt, len, siz, basic_ptr<byte, U>{pt.data(), (std::size_t)siz, alloc}, 0};
 }
 
 
