@@ -162,8 +162,7 @@ class wbase_tchar_pt : public base_tchar_pt<U, byte>{
 /*
     Standard implementations
 
-    WIDENC implementation have also a EncMetric *f field (usually a dyn_encoding instance)
-    in order to retrieve encoding dynamically
+    WIDENC implementation have also a EncMetric *f field in order to retrieve encoding dynamically
 */
 template<typename T>
 class const_tchar_pt : public base_tchar_pt<const_tchar_pt<T>, byte const>{
@@ -174,11 +173,11 @@ class const_tchar_pt : public base_tchar_pt<const_tchar_pt<T>, byte const>{
 		explicit const_tchar_pt(const byte *c) : base_tchar_pt<const_tchar_pt<T>, byte const>{c} {}
 		explicit const_tchar_pt(const char *c) : const_tchar_pt{(const byte *)c} {}
 
-		const EncMetric &format() const noexcept {return dyn_encoding<T>::instance();}
+		const EncMetric &format() const noexcept {return DynEncoding<T>::instance();}
 		int unity() const noexcept {return T::unity();}
 		int chLen() const {return T::chLen(this->ptr);}
 		bool validChar(int &chsiz) const noexcept {return T::validChar(this->ptr, chsiz);}
-		int to_unicode(unicode &uni, int l) const {return em_traits<T>::to_unicode(uni, this->ptr, l);}
+		int to_unicode(unicode &uni, int l) const {return T::to_unicode(uni, this->ptr, l);}
 		bool terminate() const {return is_all_zero(this->ptr, T::unity());}
 
 		const_tchar_pt new_instance(const byte *c) const{return const_tchar_pt<T>{c};}
@@ -223,12 +222,12 @@ class tchar_pt : public wbase_tchar_pt<tchar_pt<T>>{
 
 		const_tchar_pt<T> cast() noexcept{ return const_tchar_pt<T>{this->ptr};}
 
-		const EncMetric &format() const noexcept {return dyn_encoding<T>::instance();}
+		const EncMetric &format() const noexcept {return DynEncoding<T>::instance();}
 		int unity() const noexcept {return T::unity();}
 		int chLen() const {return T::chLen(this->ptr);}
 		bool validChar(int &chsiz) const noexcept {return T::validChar(this->ptr, chsiz);}
-		int to_unicode(unicode &uni, int l) const {return em_traits<T>::to_unicode(uni, this->ptr, l);}
-		int from_unicode(unicode uni, int l) const {return em_traits<T>::from_unicode(uni, this->ptr, l);}
+		int to_unicode(unicode &uni, int l) const {return T::to_unicode(uni, this->ptr, l);}
+		int from_unicode(unicode uni, int l) const {return T::from_unicode(uni, this->ptr, l);}
 		bool terminate() const {return is_all_zero(this->ptr, T::unity());}
 
 		tchar_pt new_instance(byte *c) const{return tchar_pt<T>{c};}
@@ -278,12 +277,6 @@ template<typename S, typename T, typename... Rarg>
 bool sameEnc(const S &f1, const T &f2, const Rarg &... far){
 	return sameEnc(f2, far...) && sameEnc(f1, f2);
 }
-/*
-template<typename S, typename T, typename... Rarg>
-bool sameEnc(const const_tchar_pt<S> &f1, const const_tchar_pt<T> &f2, const const_tchar_pt<Rarg> &... far){
-	return sameEnc(f2, far...) && sameEnc(f1, f2);
-}
-*/
 
 /*
     Return a new pointer pointing to the same array and with the same encoding, but with possible different template parameter.
@@ -292,6 +285,12 @@ template<typename S, typename T>
 tchar_pt<S> convert(tchar_pt<T> p);
 template<typename S, typename T>
 const_tchar_pt<S> convert(const_tchar_pt<T> p);
+
+/*
+    Assign an encoding to a RAW character pointer
+*/
+inline tchar_pt<WIDENC> assign(tchar_pt<RAW> r, const EncMetric &f) noexcept {return tchar_pt<WIDENC>{r.data(), f};}
+inline const_tchar_pt<WIDENC> assign(const_tchar_pt<RAW> r, const EncMetric &f) noexcept {return const_tchar_pt<WIDENC>{r.data(), f};}
 
 /*
     Make an encoding conversion between Unicode-compatible encodings using from_unicode and to_unicode functions.

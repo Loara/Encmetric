@@ -1,4 +1,3 @@
-
 /*
     This file is part of Encmetric.
     Copyright (C) 2021 Paolo De Donato.
@@ -16,6 +15,10 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Encmetric. If not, see <http://www.gnu.org/licenses/>.
 */
+#define encmetric_library
+#include <encmetric/utf32_enc.hpp>
+
+namespace adv{
 template<bool be>
 bool UTF32<be>::validChar(const byte *data, int &add) noexcept{
 	if(access(data, be, 4, 0) != byte{0})
@@ -48,6 +51,10 @@ int UTF32<be>::from_unicode(unicode uni, byte *by, int l){
 	}
 	copy_end(temp, 4, be, by, 4);
 	return 4;
+}
+
+	template class UTF32<true>;
+	template class UTF32<false>;
 }
 
 

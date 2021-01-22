@@ -48,5 +48,10 @@ inline constexpr bool utf16_range(const byte *datas, bool be) noexcept{
 	return bit_one(data, 7, 6, 4, 3) && bit_zero(data, 5);
 }
 
-#include <encmetric/utf16_enc.tpp>
+//#include <encmetric/utf16_enc.tpp>
+
+#ifndef encmetric_library
+extern template class UTF16<true>;
+extern template class UTF16<false>;
+#endif
 }

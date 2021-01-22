@@ -30,18 +30,12 @@ class UTF32{
 		static int to_unicode(unicode &uni, const byte *by, int l);
 		static int from_unicode(unicode uni, byte *by, int l);
 };
-/*
-namespace u16_c{
 
-template<bool be>
-inline constexpr int LB = be ? 1 : 0;
-template<bool be>
-inline constexpr int HB = be ? 0 : 1;
-
-}
-*/
 using UTF32LE = UTF32<false>;
 using UTF32BE = UTF32<true>;
 
-#include <encmetric/utf32_enc.tpp>
+#ifndef encmetric_library
+extern template class UTF32<true>;
+extern template class UTF32<false>;
+#endif
 }

@@ -1,4 +1,3 @@
-
 /*
     This file is part of Encmetric.
     Copyright (C) 2021 Paolo De Donato.
@@ -16,6 +15,11 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Encmetric. If not, see <http://www.gnu.org/licenses/>.
 */
+#define encmetric_library
+#include <encmetric/utf16_enc.hpp>
+
+namespace adv{
+
 template<bool be>
 int UTF16<be>::chLen(const byte *data){
 	//non è necessario fare tutti i controlli, poiché si suppone che la stringa sia corretta
@@ -109,6 +113,10 @@ int UTF16<be>::from_unicode(unicode uni, byte *by, int l){
 		copy_end(temp, 2, be, by, 2);
 	}
 	return y_byte;
+}
+
+	template class UTF16<true>;
+	template class UTF16<false>;
 }
 
 
