@@ -19,3 +19,12 @@ To build and install the library
     cmake --install .
 
 to build also the test executable turn on the option ```BUILD_TEST``` in cmake.
+
+# Encodings currently included in this library (v. 1.0.2)
+* ASCII
+* Latin1 / ISO8859-1
+* UTF8
+* UTF16LE and UTF16BE
+* UTF32LE and UTF32BE
+
+Clearly you can write and use your own encoding classes.
