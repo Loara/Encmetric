@@ -69,6 +69,12 @@ inline namespace astr_literals{
 inline astr_view operator"" _asv(const char *b, std::size_t st){
 	return astr_view{b, st, true};
 }
+inline adv_string_view<UTF16<bend>> operator"" _asv(const char16_t *b, std::size_t st){
+	return adv_string_view<UTF16<bend>>{(const byte *)b, st * 2, true};
+}
+inline adv_string_view<UTF32<bend>> operator"" _asv(const char32_t *b, std::size_t st){
+	return adv_string_view<UTF32<bend>>{(const byte *)b, st * 4, true};
+}
 
 }
 }
