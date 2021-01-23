@@ -19,4 +19,5 @@
 #include <encmetric/utf8_enc.hpp>
 #include <encmetric/utf16_enc.hpp>
 #include <encmetric/utf32_enc.hpp>
+#include <encmetric/iso8859_enc.hpp>
 #include <encmetric/utf_string.hpp>
