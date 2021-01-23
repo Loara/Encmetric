@@ -28,7 +28,7 @@ using CENC = UTF8;
 inline constexpr bool bend = false;
 
 //encoding per IO del sistema
-using IOenc = std::conditional_t<is_windows(), UTF16<bend>, UTF8>;
+using IOenc = std::conditional_t<is_windows(), UTF16<false>, UTF8>;
 
 //explicit declaration of template - for compilation improvment
 #ifndef encmetric_library
@@ -52,7 +52,7 @@ inline astr_view getstring(const char *c){
 	return astr_view{c_achar_pt{c}};
 }
 
-inline astr_view getstring(const char *c, int len){
+inline astr_view getstring(const char *c, size_t len){
 	return astr_view{c_achar_pt{c}, len, false};
 }
 
@@ -60,8 +60,17 @@ inline adv_string_view<UTF16<bend>> getstring_16(const char16_t *c){
 	return adv_string_view<UTF16<bend>>{const_tchar_pt<UTF16<bend>>{(const byte *)c}};
 }
 
-inline adv_string_view<UTF16<bend>> getstring_16(const char16_t *c, int len){
+inline adv_string_view<UTF16<bend>> getstring_16(const char16_t *c, size_t len){
 	return adv_string_view<UTF16<bend>>{const_tchar_pt<UTF16<bend>>{(const byte *)c}, len*2, false};
+}
+
+inline namespace literals{
+inline namespace astr_literals{
+inline astr_view operator"" _asv(const char *b, std::size_t st){
+	return astr_view{b, st, true};
+}
+
+}
 }
 
 }

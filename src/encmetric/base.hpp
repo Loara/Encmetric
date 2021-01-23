@@ -24,6 +24,7 @@
 #include <encmetric/byte_tools.hpp>
 
 namespace adv{
+using std::size_t;
 using unicode = std::uint_least32_t;
 /*
     UNICODE needs only 4 bytes to store bytes

@@ -24,8 +24,8 @@ class UTF8{
 		static constexpr int unity() noexcept {return 1;}
 		static int chLen(const byte *);
 		static bool validChar(const byte *, int &chlen) noexcept;
-		static int to_unicode(unicode &uni, const byte *by, int l);
-		static int from_unicode(unicode uni, byte *by, int l);
+		static int to_unicode(unicode &uni, const byte *by, size_t l);
+		static int from_unicode(unicode uni, byte *by, size_t l);
 };
 
 }

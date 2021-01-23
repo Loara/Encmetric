@@ -27,8 +27,8 @@ class UTF32{
 		static constexpr int unity() noexcept {return 4;}
 		static int chLen(const byte *){ return 4;}
 		static bool validChar(const byte *, int &chlen) noexcept;
-		static int to_unicode(unicode &uni, const byte *by, int l);
-		static int from_unicode(unicode uni, byte *by, int l);
+		static int to_unicode(unicode &uni, const byte *by, size_t l);
+		static int from_unicode(unicode uni, byte *by, size_t l);
 };
 
 using UTF32LE = UTF32<false>;

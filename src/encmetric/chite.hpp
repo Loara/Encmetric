@@ -64,7 +64,7 @@ class base_tchar_pt{
 		int b_unity() const noexcept {return mycast()->unity();}
 		int b_chLen() const {return mycast()->chLen();}
 		bool b_validChar(int &chsiz) const noexcept {return mycast()->validChar(chsiz);}
-		int b_to_unicode(unicode &uni, int l) const {return mycast()->to_unicode(uni, l);}
+		int b_to_unicode(unicode &uni, size_t l) const {return mycast()->to_unicode(uni, l);}
 		bool b_terminate() const{return mycast()->terminate();}
 		/*
 		    Step the pointer by 1 character, returns the number og bytes skipped
@@ -79,11 +79,13 @@ class base_tchar_pt{
 
 		    rsiz is the number of bytes of ptr, it will be updated
 		*/
-		bool valid_next(int &rsiz) noexcept{
+		bool valid_next(size_t &rsiz) noexcept{
 			if(b_unity() > rsiz)
 				return false;
 			int dec;
 			if(!b_validChar(dec))
+				return false;
+			if(dec > rsiz)
 				return false;
 			rsiz -= dec;
 			ptr += dec;
@@ -123,14 +125,16 @@ class base_tchar_pt{
 		    Steps this by times character
 		    
 		    Use this function instead of operator+
-		*/
-		U& add(int times){
+		
+		U& add(size_t times){
 			if(times > 0){
 				int add = b_chLen(times);
 				ptr += add;
 			}
 			return instance();
 		}
+			Useless
+		*/
 		/*
 		    Compairson
 		*/
@@ -156,7 +160,7 @@ class wbase_tchar_pt : public base_tchar_pt<U, byte>{
 	public:
 		explicit wbase_tchar_pt(byte *b) : base_tchar_pt<U, byte>{b} {}
 		
-		int b_from_unicode(unicode uni, int l) const {return this->mycast()->from_unicode(uni, l);}
+		int b_from_unicode(unicode uni, size_t l) const {return this->mycast()->from_unicode(uni, l);}
 };
 
 /*
@@ -177,7 +181,7 @@ class const_tchar_pt : public base_tchar_pt<const_tchar_pt<T>, byte const>{
 		int unity() const noexcept {return T::unity();}
 		int chLen() const {return T::chLen(this->ptr);}
 		bool validChar(int &chsiz) const noexcept {return T::validChar(this->ptr, chsiz);}
-		int to_unicode(unicode &uni, int l) const {return T::to_unicode(uni, this->ptr, l);}
+		int to_unicode(unicode &uni, size_t l) const {return T::to_unicode(uni, this->ptr, l);}
 		bool terminate() const {return is_all_zero(this->ptr, T::unity());}
 
 		const_tchar_pt new_instance(const byte *c) const{return const_tchar_pt<T>{c};}
@@ -202,7 +206,7 @@ class const_tchar_pt<WIDENC> : public base_tchar_pt<const_tchar_pt<WIDENC>, byte
 		int unity() const noexcept {return f->d_unity();}
 		int chLen() const {return f->d_chLen(this->ptr);}
 		bool validChar(int &chsiz) const noexcept {return f->d_validChar(this->ptr, chsiz);}
-		int to_unicode(unicode &uni, int l) const {return f->d_to_unicode(uni, this->ptr, l);}
+		int to_unicode(unicode &uni, size_t l) const {return f->d_to_unicode(uni, this->ptr, l);}
 		bool terminate() const {return is_all_zero(this->ptr, f->d_unity());}
 
 		const_tchar_pt<WIDENC> new_instance(const byte *c) const{return const_tchar_pt<WIDENC>{c, *f};}
@@ -226,8 +230,8 @@ class tchar_pt : public wbase_tchar_pt<tchar_pt<T>>{
 		int unity() const noexcept {return T::unity();}
 		int chLen() const {return T::chLen(this->ptr);}
 		bool validChar(int &chsiz) const noexcept {return T::validChar(this->ptr, chsiz);}
-		int to_unicode(unicode &uni, int l) const {return T::to_unicode(uni, this->ptr, l);}
-		int from_unicode(unicode uni, int l) const {return T::from_unicode(uni, this->ptr, l);}
+		int to_unicode(unicode &uni, size_t l) const {return T::to_unicode(uni, this->ptr, l);}
+		int from_unicode(unicode uni, size_t l) const {return T::from_unicode(uni, this->ptr, l);}
 		bool terminate() const {return is_all_zero(this->ptr, T::unity());}
 
 		tchar_pt new_instance(byte *c) const{return tchar_pt<T>{c};}
@@ -254,8 +258,8 @@ class tchar_pt<WIDENC> : public wbase_tchar_pt<tchar_pt<WIDENC>>{
 		int unity() const noexcept {return f->d_unity();}
 		int chLen() const {return f->d_chLen(this->ptr);}
 		bool validChar(int &chsiz) const noexcept {return f->d_validChar(this->ptr, chsiz);}
-		int to_unicode(unicode &uni, int l) const {return f->d_to_unicode(uni, this->ptr, l);}
-		int from_unicode(unicode uni, int l) const {return f->d_from_unicode(uni, this->ptr, l);}
+		int to_unicode(unicode &uni, size_t l) const {return f->d_to_unicode(uni, this->ptr, l);}
+		int from_unicode(unicode uni, size_t l) const {return f->d_from_unicode(uni, this->ptr, l);}
 		bool terminate() const {return is_all_zero(this->ptr, f->d_unity());}
 
 		tchar_pt<WIDENC> new_instance(byte *c) const{return tchar_pt<WIDENC>{c, *f};}
@@ -294,6 +298,7 @@ inline const_tchar_pt<WIDENC> assign(const_tchar_pt<RAW> r, const EncMetric &f) 
 
 /*
     Make an encoding conversion between Unicode-compatible encodings using from_unicode and to_unicode functions.
+    Note: convert only the first character
 */
 template<typename S, typename T>
 void basic_encoding_conversion(const_tchar_pt<T> in, int inlen, tchar_pt<S> out, int oulen);

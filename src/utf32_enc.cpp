@@ -32,7 +32,7 @@ bool UTF32<be>::validChar(const byte *data, int &add) noexcept{
 }
 
 template<bool be>
-int UTF32<be>::to_unicode(unicode &uni, const byte *by, int l){
+int UTF32<be>::to_unicode(unicode &uni, const byte *by, size_t l){
 	if(l < 4)
 		throw encoding_error("Not enough bytes");
 	uni = 0;
@@ -43,7 +43,7 @@ int UTF32<be>::to_unicode(unicode &uni, const byte *by, int l){
 }
 
 template<bool be>
-int UTF32<be>::from_unicode(unicode uni, byte *by, int l){
+int UTF32<be>::from_unicode(unicode uni, byte *by, size_t l){
 	byte temp[4];
 	for(int i=0; i<4; i++){
 		temp[3-i] = byte{static_cast<unsigned char>(uni & 0xff)};

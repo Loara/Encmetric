@@ -34,16 +34,16 @@ bool ASCII::validChar(const byte *data, int &add) noexcept{
 	return true;
 }
 
-int ASCII::to_unicode(unicode &uni, const byte *by, int l){
-	if(l <= 0)
+int ASCII::to_unicode(unicode &uni, const byte *by, size_t l){
+	if(l == 0)
 		throw encoding_error("Not enough bytes");
 	uni = std::to_integer<unicode>(by[0]);
 	return 1;
 }
 
-int ASCII::from_unicode(unicode uni, byte *by, int l){
-	if(l <= 0)
-		return 0;
+int ASCII::from_unicode(unicode uni, byte *by, size_t l){
+	if(l == 0)
+		throw encoding_error("Not enough bytes");
 	if(uni >= 128)
 		throw encoding_error("Cannot convert to an ASCII character");
 	by[0] = byte{static_cast<unsigned char>(uni & 0xff)};
@@ -61,16 +61,16 @@ bool Latin1::validChar(const byte *, int &add) noexcept{
 	return true;
 }
 
-int Latin1::to_unicode(unicode &uni, const byte *by, int l){
-	if(l <= 0)
+int Latin1::to_unicode(unicode &uni, const byte *by, size_t l){
+	if(l == 0)
 		throw encoding_error("Not enough bytes");
 	uni = std::to_integer<unicode>(by[0]);
 	return 1;
 }
 
-int Latin1::from_unicode(unicode uni, byte *by, int l){
-	if(l <= 0)
-		return 0;
+int Latin1::from_unicode(unicode uni, byte *by, size_t l){
+	if(l == 0)
+		throw encoding_error("Not enough bytes");
 	if(uni >= 256)
 		throw encoding_error("Cannot convert to a Latin1 character");
 	by[0] = byte{static_cast<unsigned char>(uni & 0xff)};
@@ -78,11 +78,12 @@ int Latin1::from_unicode(unicode uni, byte *by, int l){
 }
 
 //------------------------------
-
+/*
 void copyN(const byte *src, byte *dest, int len) noexcept{
 	for(int i=0; i<len; i++){
 		dest[i] = src[i];
 	}
 }
+*/
 
 

@@ -45,7 +45,7 @@ bool UTF16<be>::validChar(const byte *data, int &add) noexcept{
 }
 
 template<bool be>
-int UTF16<be>::to_unicode(unicode &uni, const byte *by, int l){
+int UTF16<be>::to_unicode(unicode &uni, const byte *by, size_t l){
 	int y_byte = 0;
 	uni = 0;
 	
@@ -77,7 +77,7 @@ int UTF16<be>::to_unicode(unicode &uni, const byte *by, int l){
 }
 
 template<bool be>
-int UTF16<be>::from_unicode(unicode uni, byte *by, int l){
+int UTF16<be>::from_unicode(unicode uni, byte *by, size_t l){
 	int y_byte;
 	if(uni >= 0 && uni < 0xffff){
 		y_byte = 2;

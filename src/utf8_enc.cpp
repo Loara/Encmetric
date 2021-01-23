@@ -62,7 +62,7 @@ bool UTF8::validChar(const byte *data, int &add) noexcept{
 	return true;
 }
 
-int UTF8::to_unicode(unicode &uni, const byte *by, int l){
+int UTF8::to_unicode(unicode &uni, const byte *by, size_t l){
 	int y_byte = 0;
 	byte b = *by;
 	uni = 0;
@@ -87,7 +87,7 @@ int UTF8::to_unicode(unicode &uni, const byte *by, int l){
 	else
 		throw encoding_error("Invalid utf8 character");
 
-	if(l < y_byte)
+	if(l < ((size_t)y_byte) )
 		throw encoding_error("Not enough bytes");
 	uni = std::to_integer<unicode>(b);
 	for(int i = 1; i < y_byte; i++){
@@ -98,7 +98,7 @@ int UTF8::to_unicode(unicode &uni, const byte *by, int l){
 	return y_byte;
 }
 
-int UTF8::from_unicode(unicode uni, byte *by, int l){
+int UTF8::from_unicode(unicode uni, byte *by, size_t l){
 	int y_byte;
 	byte set_mask{0};
 	//byte reset_mask{0}; Non è necessario
@@ -119,7 +119,7 @@ int UTF8::from_unicode(unicode uni, byte *by, int l){
 	}
 	else throw encoding_error("Not Unicode character");
 
-	if(l < y_byte)
+	if(l < ((size_t)y_byte) )
 		return 0;
 	for(int i = y_byte-1; i>=1; i--){
 		by[i] = byte{static_cast<unsigned char>(uni & 0x3f)};

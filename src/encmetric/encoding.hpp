@@ -38,13 +38,14 @@
 #include <encmetric/base.hpp>
 #include <typeindex>
 #include <type_traits>
+#include <cstring>
 
 namespace adv{
 
-void copyN(const byte *, byte *, int) noexcept;
+inline void copyN(const byte *src, byte *des, size_t l) {std::memcpy(des, src, l);}
 
-inline bool is_all_zero(const byte *data, int len){
-	for(int i=0; i<len; i++){
+inline bool is_all_zero(const byte *data, size_t len){
+	for(size_t i=0; i<len; i++){
 		if(data[i] != byte{0})
 			return false;
 	}
@@ -65,8 +66,8 @@ class EncMetric{
 		virtual int d_unity() const noexcept=0;
 		virtual int d_chLen(const byte *) const=0;
 		virtual bool d_validChar(const byte *, int &chlen) const noexcept =0;
-		virtual int d_to_unicode(unicode &, const byte *, int) const =0;
-		virtual int d_from_unicode(unicode, byte *, int) const =0;
+		virtual int d_to_unicode(unicode &, const byte *, size_t) const =0;
+		virtual int d_from_unicode(unicode, byte *, size_t) const =0;
 		virtual std::type_index index() const noexcept=0;
 };
 
@@ -86,8 +87,8 @@ class RAW{
 		i=1;
 		return true;
 	}
-	static int to_unicode(unicode &, const byte *, int) {throw encoding_error{"RAW encoding can't be converted to Unicode"};}
-	static int from_unicode(unicode, byte *, int) {throw encoding_error{"RAW encoding can't be converted to Unicode"};}
+	static int to_unicode(unicode &, const byte *, size_t) {throw encoding_error{"RAW encoding can't be converted to Unicode"};}
+	static int from_unicode(unicode, byte *, size_t) {throw encoding_error{"RAW encoding can't be converted to Unicode"};}
 };
 
 template<typename T>
@@ -130,8 +131,8 @@ class DynEncoding : public EncMetric{
 		bool d_validChar(const byte *b, int &chlen) const noexcept {return static_enc::validChar(b, chlen);}
 		std::type_index index() const noexcept {return em_traits<T>::index();}
 
-		int d_to_unicode(unicode &uni, const byte *by, int l) const {return static_enc::to_unicode(uni, by, l);}
-		int d_from_unicode(unicode uni, byte *by, int l) const {return static_enc::from_unicode(uni, by, l);}
+		int d_to_unicode(unicode &uni, const byte *by, size_t l) const {return static_enc::to_unicode(uni, by, l);}
+		int d_from_unicode(unicode uni, byte *by, size_t l) const {return static_enc::from_unicode(uni, by, l);}
 
 		static const EncMetric &instance() noexcept{
 			static DynEncoding<T> t{};
@@ -155,8 +156,8 @@ class ASCII{
 		static constexpr int unity() noexcept {return 1;}
 		static int chLen(const byte *);
 		static bool validChar(const byte *, int &) noexcept;
-		static int to_unicode(unicode &uni, const byte *by, int l);
-		static int from_unicode(unicode uni, byte *by, int l);
+		static int to_unicode(unicode &uni, const byte *by, size_t l);
+		static int from_unicode(unicode uni, byte *by, size_t l);
 };
 
 class Latin1{
@@ -164,8 +165,8 @@ class Latin1{
 		static constexpr int unity() noexcept {return 1;}
 		static int chLen(const byte *);
 		static bool validChar(const byte *, int &) noexcept;
-		static int to_unicode(unicode &uni, const byte *by, int l);
-		static int from_unicode(unicode uni, byte *by, int l);
+		static int to_unicode(unicode &uni, const byte *by, size_t l);
+		static int from_unicode(unicode uni, byte *by, size_t l);
 };
 
 }
