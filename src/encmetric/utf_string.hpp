@@ -186,7 +186,9 @@ adv_string<S, U> operator+(const adv_string<S, U> &a, const adv_string<T, U> &b)
 using wstr_view = adv_string_view<WIDENC>;
 
 template<typename U = std::allocator<byte>>
-using wstr = adv_string<WIDENC, U>;
+using wstr_d = adv_string<WIDENC, U>;
+
+using wstr = wstr_d<>;
 
 
 #include <encmetric/utf_string.tpp>

@@ -42,11 +42,16 @@ extern template class adv_string<CENC>;
 using achar_pt = tchar_pt<CENC>;
 using c_achar_pt = const_tchar_pt<CENC>;
 using astr_view = adv_string_view<CENC>;
-using astr = adv_string<CENC>;
+template<typename U = std::allocator<byte>>
+using astr_d = adv_string<CENC, U>;
+using astr = astr_d<>;
+
 using iochar_pt = tchar_pt<IOenc>;
 using c_iochar_pt = const_tchar_pt<IOenc>;
 using iostr_view = adv_string_view<IOenc>;
-using iostr = adv_string<IOenc>;
+template<typename U = std::allocator<byte>>
+using iostr_d = adv_string<IOenc, U>;
+using iostr = iostr_d<>;
 
 inline astr_view getstring(const char *c){
 	return astr_view{c_achar_pt{c}};
