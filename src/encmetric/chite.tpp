@@ -17,21 +17,20 @@
     along with Encmetric. If not, see <http://www.gnu.org/licenses/>.
 */
 template<typename S, typename T>
-bool sameEnc(const const_tchar_pt<S> &, const const_tchar_pt<T> &) {return false;}
-
-template<typename T>
-bool sameEnc(const const_tchar_pt<T> &, const const_tchar_pt<T> &) {return true;}
+bool sameEnc(const const_tchar_pt<S> &, const const_tchar_pt<T> &) {
+	return index_traits<S>::index() == index_traits<T>::index();
+}
 
 template<typename T>
 bool sameEnc(const const_tchar_pt<T> &, const const_tchar_pt<WIDENC> &a){
 	const EncMetric &f = a.format();
-	return f.index() == std::type_index(typeid(T));
+	return f.index() == index_traits<T>::index();
 }
 
 template<typename T>
 bool sameEnc(const const_tchar_pt<WIDENC> &a, const const_tchar_pt<T> &){
 	const EncMetric &f = a.format();
-	return f.index() == std::type_index(typeid(T));
+	return f.index() == index_traits<T>::index();
 }
 
 inline bool sameEnc(const const_tchar_pt<WIDENC> &a, const const_tchar_pt<WIDENC> &b){

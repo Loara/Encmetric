@@ -64,6 +64,25 @@ inline adv_string_view<UTF16<bend>> getstring_16(const char16_t *c, size_t len){
 	return adv_string_view<UTF16<bend>>{const_tchar_pt<UTF16<bend>>{(const byte *)c}, len*2, false};
 }
 
+/*
+    Detect utf8, utf16 encoding from BOM, if haven't BOM then throw exception
+*/
+inline const EncMetric &detect_bom(adv_string_view<RAW> t){
+	const_tchar_pt<RAW> ptr = t.begin();
+	if(t.size() < 2)
+		throw encoding_error{"No BOM"};
+	if(ptr[0] == byte{0xfe} && ptr[1] == byte{0xff})
+		return DynEncoding<UTF16<true>>::instance();
+	if(ptr[0] == byte{0xff} && ptr[1] == byte{0xfe})
+		return DynEncoding<UTF16<false>>::instance();
+	if(t.size() < 3)
+		throw encoding_error{"No BOM"};
+	if(ptr[0] == byte{0xef} && ptr[1] == byte{0xbb} && ptr[2] == byte{0xbf})
+		return DynEncoding<UTF8>::instance();
+	throw encoding_error{"No BOM"};
+	
+}
+
 inline namespace literals{
 inline namespace astr_literals{
 inline astr_view operator"" _asv(const char *b, std::size_t st){

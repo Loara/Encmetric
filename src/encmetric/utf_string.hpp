@@ -39,14 +39,14 @@ class adv_string; //forward declaration
 /*
     Select only the second template parameter.
     Needed for SFINAE constructors
-*/
+
 template<typename A, typename B>
 struct second{
 	using type = B;
 };
 template<typename A, typename B>
 using second_t = typename second<A, B>::type;
-
+*/
 template<typename T>
 class adv_string_view{
 	private:
@@ -65,20 +65,20 @@ class adv_string_view{
 		/*
 		    not-WIDENC costructors
 		*/
-		template<typename U, enable_not_widenc_t<second_t<U, T>, int> = 0>
+		template<typename U, enable_not_widenc_t<T, int, U> = 0>
 		explicit adv_string_view(const U *b) : adv_string_view{const_tchar_pt<T>{b}} {}
-		template<typename U, enable_not_widenc_t<second_t<U, T>, int> = 0>
+		template<typename U, enable_not_widenc_t<T, int, U> = 0>
 		explicit adv_string_view(const U *b, size_t dim, bool dim_is_size) : adv_string_view{const_tchar_pt<T>{b}, dim, dim_is_size} {}
-		template<typename U, enable_not_widenc_t<second_t<U, T>, int> = 0>
+		template<typename U, enable_not_widenc_t<T, int, U> = 0>
 		explicit adv_string_view(const U *b, size_t siz, size_t len) : adv_string_view{const_tchar_pt<T>{b}, siz, len} {}
 		/*
 		    WIDENC costructors
 		*/
-		template<typename U, enable_widenc_t<second_t<U, T>, int> = 0>
+		template<typename U, enable_widenc_t<T, int, U> = 0>
 		explicit adv_string_view(const U *b, const EncMetric &f) : adv_string_view{const_tchar_pt<T>{b, f}} {}
-		template<typename U, enable_widenc_t<second_t<U, T>, int> = 0>
+		template<typename U, enable_widenc_t<T, int, U> = 0>
 		explicit adv_string_view(const U *b, size_t dim, bool dim_is_size, const EncMetric &f) : adv_string_view{const_tchar_pt<T>{b, f}, dim, dim_is_size} {}
-		template<typename U, enable_widenc_t<second_t<U, T>, int> = 0>
+		template<typename U, enable_widenc_t<T, int, U> = 0>
 		explicit adv_string_view(const U *b, size_t siz, size_t len, const EncMetric &f) : adv_string_view{const_tchar_pt<T>{b, f}, siz, len} {}
 
 		virtual ~adv_string_view() {}

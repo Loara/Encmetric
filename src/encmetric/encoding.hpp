@@ -100,20 +100,34 @@ using is_raw = std::is_same<T, RAW>;
 template<typename T>
 inline constexpr bool is_raw_v = is_raw<T>::value;
 
-template<typename T, typename U>
-using enable_widenc = std::enable_if<is_widenc_v<T>, U>;
-template<typename T, typename U>
-using enable_not_widenc = std::enable_if<!is_widenc_v<T>, U>;
-template<typename T, typename U>
-using enable_widenc_t = typename enable_widenc<T, U>::type;
-template<typename T, typename U>
-using enable_not_widenc_t = typename enable_not_widenc<T, U>::type;
+/*
+    Template packs are used when you need SFINAE
+*/
+template<typename T, typename U, typename...>
+struct enable_widenc : public std::enable_if<is_widenc_v<T>, U> {};
+template<typename T, typename U, typename...>
+struct enable_not_widenc : public std::enable_if<!is_widenc_v<T>, U>{};
 
+template<typename T, typename U, typename... Args>
+using enable_widenc_t = typename enable_widenc<T, U, Args...>::type;
+template<typename T, typename U, typename... Args>
+using enable_not_widenc_t = typename enable_not_widenc<T, U, Args...>::type;
 
-template<typename T, enable_not_widenc_t<T, int> =0>
-struct em_traits{
+/*
+    e,_traits control if encoding class ovverides the index
+*/
+template<typename T, enable_not_widenc_t<T, int>, typename = void>
+struct index_traits_0{
 	static std::type_index index() noexcept {return std::type_index{typeid(T)};}
 };
+
+template<typename T>
+struct index_traits_0<T, 0, std::void_t<decltype(T::enc_index)>>{
+	static std::type_index index() noexcept {return T::enc_index();}
+};
+
+template<typename T>
+struct index_traits : public index_traits_0<T, 0> {};
 
 /*
     Wrapper of an encoding T in order to save it in a class field of WIDENC classes
@@ -129,7 +143,7 @@ class DynEncoding : public EncMetric{
 		int d_unity() const noexcept {return static_enc::unity();}
 		int d_chLen(const byte *b) const {return static_enc::chLen(b);}
 		bool d_validChar(const byte *b, int &chlen) const noexcept {return static_enc::validChar(b, chlen);}
-		std::type_index index() const noexcept {return em_traits<T>::index();}
+		std::type_index index() const noexcept {return index_traits<T>::index();}
 
 		int d_to_unicode(unicode &uni, const byte *by, size_t l) const {return static_enc::to_unicode(uni, by, l);}
 		int d_from_unicode(unicode uni, byte *by, size_t l) const {return static_enc::from_unicode(uni, by, l);}
@@ -144,7 +158,7 @@ template<typename T>
 constexpr void assert_raw(){static_assert(!is_raw_v<T>, "Using RAW format");}
 
 inline void assert_raw(const EncMetric &f){
-	if(f.index() == em_traits<RAW>::index())
+	if(f.index() == index_traits<RAW>::index())
 		throw encoding_error("Using RAW format");
 }
 
