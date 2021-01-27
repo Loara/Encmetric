@@ -135,13 +135,13 @@ bool adv_string_view<T>::verify_safe() const noexcept{
 
 template<typename T>
 size_t adv_string_view<T>::size(size_t a, size_t n) const{
-	if(a < 0 || n < 0)
-		throw std::out_of_range{"Out of range"};
-	if(a+n > len)
+	if(a+n < n || a+n > len)
 		throw std::out_of_range{"Out of range"};
 	if(n == 0)
 		return 0;
-	const_tchar_pt<T> mem = ptr+a;
+	const_tchar_pt<T> mem = ptr;
+	for(size_t i=0; i<a; i++)
+		mem.next();
 	size_t ret = 0;
 	for(size_t i=0; i<n; i++){
 		ret += mem.next();
@@ -157,7 +157,9 @@ adv_string_view<T> adv_string_view<T>::substring(size_t b, size_t e, bool ign) c
 		e = len;
 	if(b > e)
 		b = e;
-	const_tchar_pt<T> nei = ptr+b;
+	const_tchar_pt<T> nei = ptr;
+	for(size_t i=0; i<b; i++)
+		nei.next();
 	size_t nlen = size(b, e-b);
 	return adv_string_view<T>{nei, e - b, nlen};
 }
