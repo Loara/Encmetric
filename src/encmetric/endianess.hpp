@@ -18,35 +18,20 @@
 */
 
 /*
-    Defines system-dependant constants
+    General endianess rules (not only little endian or big endian)
 */
 
-#undef encmetric_bend_
-
-#ifdef __GNUG__
-	#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-		#define encmetric_bend_
-	#endif
-#endif
-
-#cmakedefine using_windows
-
+#include <encmetric/base.hpp>
 namespace adv{
 
-inline constexpr bool is_windows() noexcept{
-	#ifdef using_windows
-		return true;
-	#else
-		return false;
-	#endif
-}
+class big_endian{
+	public:
+			static constexpr size_t a_index(size_t i, size_t base) noexcept {return i;}
+};
 
-inline constexpr bool is_big_endian() noexcept{
-	#ifdef encmetric_bend_
-		return true;
-	#else
-		return false;
-	#endif
-}
+class little_endian{
+	public:
+			static constexpr size_t a_index(size_t i, size_t base) noexcept {return base - i -1;}
+};
 
 }
