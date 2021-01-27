@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.19)
 
-project(encmetric VERSION 1.1 DESCRIPTION "Library to manage encoded strings" LANGUAGES CXX)
+project(encmetric VERSION 1.2 DESCRIPTION "Library to manage encoded strings" LANGUAGES CXX)
 
 #require C++17
 set(CMAKE_CXX_STANDARD 17)
