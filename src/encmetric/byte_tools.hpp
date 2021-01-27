@@ -70,6 +70,7 @@ constexpr bool bit_one(B test, T... all){
      - set_bits sets these bits
      - reset_bits resets these bits
      - leave_bits resets all the remaining bits leaving the remaining unchanged
+     - swap_bits swaps these bits
 */
 template<typename B, typename... T>
 constexpr void set_bits(B &mask, T... all){
@@ -84,6 +85,11 @@ constexpr void reset_bits(B &mask, T... all){
 template<typename B, typename... T>
 constexpr void leave_bits(B &mask, T... all){
 	mask &= compose_bit_mask<B>(all...);
+}
+
+template<typename B, typename... T>
+constexpr void swap_bits(B &mask, T... all){
+	mask ^= compose_bit_mask<B>(all...);
 }
 
 /*
