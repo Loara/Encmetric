@@ -134,19 +134,43 @@ bool adv_string_view<T>::verify_safe() const noexcept{
 }
 
 template<typename T>
+const_tchar_pt<T> adv_string_view<T>::at(size_t chr) const{
+	if(chr > len)
+		throw std::out_of_range{"Out of range"};
+	if(chr == 0)
+		return ptr;
+	if constexpr(fixed_size<T>){
+		return ptr + (chr * T::unity());
+	}
+	else{
+		const_tchar_pt<T> ret = ptr;
+		if(chr == len)
+			return ret + siz;
+		for(size_t i=0; i< chr; i++)
+			ret.next();
+		return ret;
+	}
+};
+
+template<typename T>
 size_t adv_string_view<T>::size(size_t a, size_t n) const{
 	if(a+n < n || a+n > len)
 		throw std::out_of_range{"Out of range"};
 	if(n == 0)
 		return 0;
-	const_tchar_pt<T> mem = ptr;
-	for(size_t i=0; i<a; i++)
-		mem.next();
-	size_t ret = 0;
-	for(size_t i=0; i<n; i++){
-		ret += mem.next();
+	if constexpr (fixed_size<T>){
+		return n * T::unity();
 	}
-	return ret;
+	else{
+		const_tchar_pt<T> mem = ptr;
+		for(size_t i=0; i<a; i++)
+			mem.next();
+		size_t ret = 0;
+		for(size_t i=0; i<n; i++){
+			ret += mem.next();
+		}
+		return ret;
+	}
 }
 
 template<typename T>
@@ -157,11 +181,20 @@ adv_string_view<T> adv_string_view<T>::substring(size_t b, size_t e, bool ign) c
 		e = len;
 	if(b > e)
 		b = e;
-	const_tchar_pt<T> nei = ptr;
-	for(size_t i=0; i<b; i++)
-		nei.next();
-	size_t nlen = size(b, e-b);
-	return adv_string_view<T>{nei, e - b, nlen};
+	if constexpr(fixed_size<T>){
+		const_tchar_pt<T> nei = ptr + (b * T::unity());
+		return adv_string_view<T>{e-b, (e-b) * T::unity(), nei};
+	}
+	else{
+		const_tchar_pt<T> nei = ptr;
+		for(size_t i=0; i<b; i++)
+			nei.next();
+		size_t nlen = 0;
+		const_tchar_pt<T> temp = nei;
+		for(int i=0; i<(e-b); i++)
+			nlen += temp.next();
+		return adv_string_view<T>{e - b, nlen, nei};
+	}
 }
 
 template<typename T> template<typename S>

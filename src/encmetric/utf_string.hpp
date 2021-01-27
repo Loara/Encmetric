@@ -126,8 +126,12 @@ class adv_string_view{
 		const byte *data() const noexcept {return ptr.data();}
 		const char *raw() const noexcept {return (const char *)(ptr.data());}
 		std::string toString() const noexcept {return std::string{(const char *)(ptr.data()), siz};}
-		const_tchar_pt<T> begin() const noexcept {return ptr;}
-		const_tchar_pt<T> end() const noexcept {return ptr.new_instance(ptr.data()+siz);}
+		/*
+			Mustn't throw any exception if 0 <= a <= len
+		*/
+		const_tchar_pt<T> at(size_t chr) const;
+		const_tchar_pt<T> begin() const noexcept {return at(0);}
+		const_tchar_pt<T> end() const noexcept {return at(len);}
 
 		template<typename S>
 		adv_string_view<S> basic_encoding_conversion(tchar_pt<S> buffer, size_t blen) const;
