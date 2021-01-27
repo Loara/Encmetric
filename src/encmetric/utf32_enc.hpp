@@ -25,6 +25,7 @@ template<bool be>
 class UTF32{
 	public:
 		static constexpr int unity() noexcept {return 4;}
+		static constexpr int max_bytes() {return 4;}
 		static int chLen(const byte *){ return 4;}
 		static bool validChar(const byte *, int &chlen) noexcept;
 		static int to_unicode(unicode &uni, const byte *by, size_t l);

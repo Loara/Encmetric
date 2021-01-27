@@ -62,6 +62,7 @@ class base_tchar_pt{
 		    Informations about relative EncMetric
 		*/
 		int b_unity() const noexcept {return mycast()->unity();}
+		int b_max_bytes() const {return mycast()->max_bytes();}
 		int b_chLen() const {return mycast()->chLen();}
 		bool b_validChar(int &chsiz) const noexcept {return mycast()->validChar(chsiz);}
 		int b_to_unicode(unicode &uni, size_t l) const {return mycast()->to_unicode(uni, l);}
@@ -179,6 +180,7 @@ class const_tchar_pt : public base_tchar_pt<const_tchar_pt<T>, byte const>{
 
 		const EncMetric &format() const noexcept {return DynEncoding<T>::instance();}
 		int unity() const noexcept {return T::unity();}
+		int max_bytes() const {return T::max_bytes();}
 		int chLen() const {return T::chLen(this->ptr);}
 		bool validChar(int &chsiz) const noexcept {return T::validChar(this->ptr, chsiz);}
 		int to_unicode(unicode &uni, size_t l) const {return T::to_unicode(uni, this->ptr, l);}
@@ -204,6 +206,7 @@ class const_tchar_pt<WIDENC> : public base_tchar_pt<const_tchar_pt<WIDENC>, byte
 
 		const EncMetric &format() const noexcept {return *f;}
 		int unity() const noexcept {return f->d_unity();}
+		int max_bytes() const {return f->d_max_bytes();}
 		int chLen() const {return f->d_chLen(this->ptr);}
 		bool validChar(int &chsiz) const noexcept {return f->d_validChar(this->ptr, chsiz);}
 		int to_unicode(unicode &uni, size_t l) const {return f->d_to_unicode(uni, this->ptr, l);}
@@ -228,6 +231,7 @@ class tchar_pt : public wbase_tchar_pt<tchar_pt<T>>{
 
 		const EncMetric &format() const noexcept {return DynEncoding<T>::instance();}
 		int unity() const noexcept {return T::unity();}
+		int max_bytes() const {return T::max_bytes();}
 		int chLen() const {return T::chLen(this->ptr);}
 		bool validChar(int &chsiz) const noexcept {return T::validChar(this->ptr, chsiz);}
 		int to_unicode(unicode &uni, size_t l) const {return T::to_unicode(uni, this->ptr, l);}
@@ -256,6 +260,7 @@ class tchar_pt<WIDENC> : public wbase_tchar_pt<tchar_pt<WIDENC>>{
 		const_tchar_pt<WIDENC> cast() noexcept{ return const_tchar_pt<WIDENC>{this->ptr, *f};}
 
 		int unity() const noexcept {return f->d_unity();}
+		int max_bytes() const {return f->d_max_bytes();}
 		int chLen() const {return f->d_chLen(this->ptr);}
 		bool validChar(int &chsiz) const noexcept {return f->d_validChar(this->ptr, chsiz);}
 		int to_unicode(unicode &uni, size_t l) const {return f->d_to_unicode(uni, this->ptr, l);}

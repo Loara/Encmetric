@@ -23,6 +23,9 @@
     static:
 
      - int unity() noexcept  => minimum number of bytes needed to detect the length of a character
+     - int max_bytes()  => maximum number of bytes needed to store an entire character, throws an
+        encoding_error if the encoding doesn't set any superior limit (notice that since there are only a finite number 
+        of character there will be a superior limit).
      - int chLen(const byte *)  => the length in bytes of the first character pointed by (can throw
         an encoding_error if the length can't be recognized). The first purpouse of this function
         is only to calculate le length of a character, not to verify it.
@@ -64,6 +67,7 @@ class EncMetric{
 	public:
 		virtual ~EncMetric() {}
 		virtual int d_unity() const noexcept=0;
+		virtual int d_max_bytes() const=0;
 		virtual int d_chLen(const byte *) const=0;
 		virtual bool d_validChar(const byte *, int &chlen) const noexcept =0;
 		virtual int d_to_unicode(unicode &, const byte *, size_t) const =0;
@@ -82,6 +86,7 @@ class WIDENC{};
 class RAW{
 	public:
 	static constexpr int unity() noexcept {return 1;}
+	static constexpr int max_bytes() {return 1;}
 	static int chLen(const byte *) {return 1;}
 	static bool validChar(const byte *, int &i) noexcept{
 		i=1;
@@ -141,6 +146,7 @@ class DynEncoding : public EncMetric{
 		~DynEncoding() {}
 
 		int d_unity() const noexcept {return static_enc::unity();}
+		int d_max_bytes() const {return static_enc::max_bytes();}
 		int d_chLen(const byte *b) const {return static_enc::chLen(b);}
 		bool d_validChar(const byte *b, int &chlen) const noexcept {return static_enc::validChar(b, chlen);}
 		std::type_index index() const noexcept {return index_traits<T>::index();}
@@ -168,6 +174,7 @@ inline void assert_raw(const EncMetric &f){
 class ASCII{
 	public:
 		static constexpr int unity() noexcept {return 1;}
+		static constexpr int max_bytes() {return 1;}
 		static int chLen(const byte *);
 		static bool validChar(const byte *, int &) noexcept;
 		static int to_unicode(unicode &uni, const byte *by, size_t l);
@@ -177,6 +184,7 @@ class ASCII{
 class Latin1{
 	public:
 		static constexpr int unity() noexcept {return 1;}
+		static constexpr int max_bytes() {return 1;}
 		static int chLen(const byte *);
 		static bool validChar(const byte *, int &) noexcept;
 		static int to_unicode(unicode &uni, const byte *by, size_t l);
