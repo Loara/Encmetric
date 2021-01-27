@@ -30,7 +30,8 @@ template<typename Enc>
 class ISO_8859_basic{
 	public:
 		static constexpr int unity() noexcept {return 1;}
-		static constexpr int max_bytes() {return 1;}
+		static constexpr bool has_max() noexcept {return true;}
+		static constexpr int max_bytes() noexcept {return 1;}
 		static int chLen(const byte *) {return 1;}
 		static bool validChar(const byte *, int &chlen) noexcept {chlen=1; return true;}
 		static int to_unicode(unicode &uni, const byte *by, int l){

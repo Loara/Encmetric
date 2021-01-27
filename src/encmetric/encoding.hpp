@@ -22,10 +22,10 @@
     Any implementation of an Encoding Metric must have these function member declared as 
     static:
 
-     - int unity() noexcept  => minimum number of bytes needed to detect the length of a character
-     - int max_bytes()  => maximum number of bytes needed to store an entire character, throws an
-        encoding_error if the encoding doesn't set any superior limit (notice that since there are only a finite number 
-        of character there will be a superior limit).
+     - constexpr int unity() noexcept  => minimum number of bytes needed to detect the length of a character
+     - constexpr bool has_max() noexcept => the encoding fixes the maximum number of bytes per-character
+     - constexpr int max_bytes() noexcept => maximum number of bytes needed to store an entire character, undefined
+       if has_max is false
      - int chLen(const byte *)  => the length in bytes of the first character pointed by (can throw
         an encoding_error if the length can't be recognized). The first purpouse of this function
         is only to calculate le length of a character, not to verify it.
@@ -86,6 +86,7 @@ class WIDENC{};
 class RAW{
 	public:
 	static constexpr int unity() noexcept {return 1;}
+	static constexpr bool has_max() noexcept {return true;}
 	static constexpr int max_bytes() {return 1;}
 	static int chLen(const byte *) {return 1;}
 	static bool validChar(const byte *, int &i) noexcept{
@@ -118,8 +119,13 @@ using enable_widenc_t = typename enable_widenc<T, U, Args...>::type;
 template<typename T, typename U, typename... Args>
 using enable_not_widenc_t = typename enable_not_widenc<T, U, Args...>::type;
 
+template<typename T>
+inline constexpr bool fixed_size = T::has_max() && (T::unity() == T::max_bytes());
+template<>
+inline constexpr bool fixed_size<WIDENC> = false;
+
 /*
-    e,_traits control if encoding class ovverides the index
+    index_traits control if encoding class ovverides the index
 */
 template<typename T, enable_not_widenc_t<T, int>, typename = void>
 struct index_traits_0{
@@ -154,6 +160,8 @@ class DynEncoding : public EncMetric{
 		int d_to_unicode(unicode &uni, const byte *by, size_t l) const {return static_enc::to_unicode(uni, by, l);}
 		int d_from_unicode(unicode uni, byte *by, size_t l) const {return static_enc::from_unicode(uni, by, l);}
 
+		constexpr bool d_fixed_size() const noexcept {return fixed_size<T>;}
+
 		static const EncMetric &instance() noexcept{
 			static DynEncoding<T> t{};
 			return t;
@@ -174,7 +182,8 @@ inline void assert_raw(const EncMetric &f){
 class ASCII{
 	public:
 		static constexpr int unity() noexcept {return 1;}
-		static constexpr int max_bytes() {return 1;}
+		static constexpr bool has_max() noexcept {return true;}
+		static constexpr int max_bytes() noexcept {return 1;}
 		static int chLen(const byte *);
 		static bool validChar(const byte *, int &) noexcept;
 		static int to_unicode(unicode &uni, const byte *by, size_t l);
@@ -184,7 +193,8 @@ class ASCII{
 class Latin1{
 	public:
 		static constexpr int unity() noexcept {return 1;}
-		static constexpr int max_bytes() {return 1;}
+		static constexpr bool has_max() noexcept {return true;}
+		static constexpr int max_bytes() noexcept {return 1;}
 		static int chLen(const byte *);
 		static bool validChar(const byte *, int &) noexcept;
 		static int to_unicode(unicode &uni, const byte *by, size_t l);

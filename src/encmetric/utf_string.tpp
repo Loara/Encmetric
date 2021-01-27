@@ -33,35 +33,46 @@ template<typename T>
 void deduce_lens(const_tchar_pt<T> ptr, size_t dim, bool issiz, size_t &len, size_t &siz){
 	len = 0;
 	siz = 0;
-	int add;
-	size_t oldim;
+	if constexpr(fixed_size<T>){
+		if(issiz){
+			len = dim / T::unity();
+		}
+		else{
+			len = dim;
+		}
+		siz = len * T::unity();
+	}
+	else{
+		int add;
+		size_t oldim;
 
-	if(issiz){
-		try{
-			add = ptr.next();
-			oldim = dim;
-			dim -= add;
-			while(dim < oldim){//Overflow test for unsigned integer
-				siz += add;
-				len++;
-				if(dim == 0)
-					break;
+		if(issiz){
+			try{
 				add = ptr.next();
 				oldim = dim;
 				dim -= add;
+				while(dim < oldim){//Overflow test for unsigned integer
+					siz += add;
+					len++;
+					if(dim == 0)
+						break;
+					add = ptr.next();
+					oldim = dim;
+					dim -= add;
+				}
 			}
+			catch(const encoding_error &){}
 		}
-		catch(const encoding_error &){}
-	}
-	else{
-		try{
-			for(size_t i=0; i<dim; i++){
-				add = ptr.next();
-				siz += add;
-				len++;
+		else{
+			try{
+				for(size_t i=0; i<dim; i++){
+					add = ptr.next();
+					siz += add;
+					len++;
+				}
 			}
+			catch(const encoding_error &){}
 		}
-		catch(const encoding_error &){}
 	}
 }
 //-----------------------
@@ -77,17 +88,25 @@ adv_string_view<T>::adv_string_view(const_tchar_pt<T> cu, size_t dim, bool isdim
 
 template<typename T>
 adv_string_view<T>::adv_string_view(const_tchar_pt<T> cu, size_t size, size_t lent) : ptr{cu}, len{0}, siz{0}{
-	int add;
-	size_t olsiz;
-	for(size_t i=0; i<lent; i++){
-		add = cu.next();
-		olsiz = size;
-		size -= add;
-		siz += add;
-		if(size >= olsiz)
-			throw encoding_error("Too small string");
+	if constexpr(fixed_size<T>){
+		if(size / T::unity() < lent)
+			throw encoding_error("Too small string");//prevent integer overflow due to multiplication
+		len = lent;
+		siz = lent * T::unity(); //may be siz < size
 	}
-	len = lent;
+	else{
+		int add;
+		size_t olsiz;
+		for(size_t i=0; i<lent; i++){
+			add = cu.next();
+			olsiz = size;
+			size -= add;
+			siz += add;
+			if(size >= olsiz)
+				throw encoding_error("Too small string");
+		}
+		len = lent;
+	}
 }
 
 template<typename T>

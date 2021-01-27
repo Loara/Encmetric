@@ -37,7 +37,7 @@ namespace adv{
 /*
     Base class of all pointer-type operations
 */
-template<typename U, typename B>
+template<typename T, typename U, typename B>
 class base_tchar_pt{
 	private:
 		using data_type = B;
@@ -71,9 +71,15 @@ class base_tchar_pt{
 		    Step the pointer by 1 character, returns the number og bytes skipped
 		*/
 		int next(){
-			int add = b_chLen();
-			ptr += add;
-			return add;
+			if constexpr(fixed_size<T>){
+				ptr += T::unity();
+				return T::unity();
+			}
+			else{
+				int add = b_chLen();
+				ptr += add;
+				return add;
+			}
 		}
 		/*
 		    Validate the first character, then skip it
@@ -156,10 +162,10 @@ class base_tchar_pt{
 /*
     Adds the funstion wrapper from_unicode for rw pointers
 */
-template<typename U>
-class wbase_tchar_pt : public base_tchar_pt<U, byte>{
+template<typename T, typename U>
+class wbase_tchar_pt : public base_tchar_pt<T, U, byte>{
 	public:
-		explicit wbase_tchar_pt(byte *b) : base_tchar_pt<U, byte>{b} {}
+		explicit wbase_tchar_pt(byte *b) : base_tchar_pt<T, U, byte>{b} {}
 		
 		int b_from_unicode(unicode uni, size_t l) const {return this->mycast()->from_unicode(uni, l);}
 };
@@ -170,12 +176,12 @@ class wbase_tchar_pt : public base_tchar_pt<U, byte>{
     WIDENC implementation have also a EncMetric *f field in order to retrieve encoding dynamically
 */
 template<typename T>
-class const_tchar_pt : public base_tchar_pt<const_tchar_pt<T>, byte const>{
+class const_tchar_pt : public base_tchar_pt<T, const_tchar_pt<T>, byte const>{
 	public:
 		using static_enc = T;
 
-		explicit const_tchar_pt() : base_tchar_pt<const_tchar_pt<T>, byte const>{nullptr} {}
-		explicit const_tchar_pt(const byte *c) : base_tchar_pt<const_tchar_pt<T>, byte const>{c} {}
+		explicit const_tchar_pt() : base_tchar_pt<T, const_tchar_pt<T>, byte const>{nullptr} {}
+		explicit const_tchar_pt(const byte *c) : base_tchar_pt<T, const_tchar_pt<T>, byte const>{c} {}
 		explicit const_tchar_pt(const char *c) : const_tchar_pt{(const byte *)c} {}
 
 		const EncMetric &format() const noexcept {return DynEncoding<T>::instance();}
@@ -191,14 +197,14 @@ class const_tchar_pt : public base_tchar_pt<const_tchar_pt<T>, byte const>{
 };
 
 template<>
-class const_tchar_pt<WIDENC> : public base_tchar_pt<const_tchar_pt<WIDENC>, byte const>{
+class const_tchar_pt<WIDENC> : public base_tchar_pt<WIDENC, const_tchar_pt<WIDENC>, byte const>{
 	private:
 		const EncMetric *f;
 	public:
 		using static_enc = WIDENC;
 
-		explicit const_tchar_pt(const EncMetric &rf) : base_tchar_pt<const_tchar_pt<WIDENC>, byte const>{nullptr}, f{&rf} {}
-		explicit const_tchar_pt(const byte *c, const EncMetric &rf) : base_tchar_pt<const_tchar_pt<WIDENC>, byte const>{c}, f{&rf} {}
+		explicit const_tchar_pt(const EncMetric &rf) : base_tchar_pt<WIDENC, const_tchar_pt<WIDENC>, byte const>{nullptr}, f{&rf} {}
+		explicit const_tchar_pt(const byte *c, const EncMetric &rf) : base_tchar_pt<WIDENC, const_tchar_pt<WIDENC>, byte const>{c}, f{&rf} {}
 		explicit const_tchar_pt(const char *c, const EncMetric &rf) : const_tchar_pt{(const byte *)c, rf} {}
 		explicit const_tchar_pt(const EncMetric &&rf)=delete;
 		explicit const_tchar_pt(const byte *c, const EncMetric &&rf)=delete;
@@ -219,12 +225,12 @@ class const_tchar_pt<WIDENC> : public base_tchar_pt<const_tchar_pt<WIDENC>, byte
 //-----------
 
 template<typename T>
-class tchar_pt : public wbase_tchar_pt<tchar_pt<T>>{
+class tchar_pt : public wbase_tchar_pt<T, tchar_pt<T>>{
 	public:
 		using static_enc = T;
 
-		explicit tchar_pt() : wbase_tchar_pt<tchar_pt<T>>{nullptr} {}
-		explicit tchar_pt(byte *c) : wbase_tchar_pt<tchar_pt<T>>{c} {}
+		explicit tchar_pt() : wbase_tchar_pt<T, tchar_pt<T>>{nullptr} {}
+		explicit tchar_pt(byte *c) : wbase_tchar_pt<T, tchar_pt<T>>{c} {}
 		explicit tchar_pt(char *c) : tchar_pt{(byte *)c} {}
 
 		const_tchar_pt<T> cast() noexcept{ return const_tchar_pt<T>{this->ptr};}
@@ -243,14 +249,14 @@ class tchar_pt : public wbase_tchar_pt<tchar_pt<T>>{
 };
 
 template<>
-class tchar_pt<WIDENC> : public wbase_tchar_pt<tchar_pt<WIDENC>>{
+class tchar_pt<WIDENC> : public wbase_tchar_pt<WIDENC, tchar_pt<WIDENC>>{
 	private:
 		const EncMetric *f;
 	public:
 		using static_enc = WIDENC;
 
-		explicit tchar_pt(const EncMetric &rf) : wbase_tchar_pt<tchar_pt<WIDENC>>{nullptr}, f{&rf} {}
-		explicit tchar_pt(byte *c, const EncMetric &rf) : wbase_tchar_pt<tchar_pt<WIDENC>>{c}, f{&rf} {}
+		explicit tchar_pt(const EncMetric &rf) : wbase_tchar_pt<WIDENC, tchar_pt<WIDENC>>{nullptr}, f{&rf} {}
+		explicit tchar_pt(byte *c, const EncMetric &rf) : wbase_tchar_pt<WIDENC, tchar_pt<WIDENC>>{c}, f{&rf} {}
 		explicit tchar_pt(char *c, const EncMetric &rf) : tchar_pt{(byte *)c, rf} {}
 		explicit tchar_pt(const EncMetric &&rf)=delete;
 		explicit tchar_pt(byte *c, const EncMetric &&rf)=delete;
