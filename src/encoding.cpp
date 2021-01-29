@@ -63,14 +63,14 @@ bool Latin1::validChar(const byte *, int &add) noexcept{
 
 int Latin1::to_unicode(unicode &uni, const byte *by, size_t l){
 	if(l == 0)
-		throw encoding_error("Not enough bytes");
+		return 0;
 	uni = to_integer<unicode>(by[0]);
 	return 1;
 }
 
 int Latin1::from_unicode(unicode uni, byte *by, size_t l){
 	if(l == 0)
-		throw encoding_error("Not enough bytes");
+		return 0;
 	if(uni >= 256)
 		throw encoding_error("Cannot convert to a Latin1 character");
 	by[0] = byte{static_cast<std::uint8_t>(uni & 0xff)};

@@ -50,9 +50,9 @@ using second_t = typename second<A, B>::type;
 template<typename T>
 class adv_string_view{
 	private:
+		const_tchar_pt<T> ptr;
 		size_t len;//character number
 		size_t siz;//bytes number
-		const_tchar_pt<T> ptr;
 	protected:
 		explicit adv_string_view(size_t length, size_t size, const_tchar_pt<T> bin) noexcept : ptr{bin}, len{length}, siz{size} {}
 	public:

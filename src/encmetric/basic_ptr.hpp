@@ -35,8 +35,8 @@ class basic_ptr{
 	public:
 		T *memory;
 		std::size_t dimension;
-		basic_ptr() : memory{nullptr}, dimension{0}, alloc{} {}
-		explicit basic_ptr(std::size_t dim, const U &all = U{}) : memory{nullptr}, dimension{0}, alloc{all} {
+		basic_ptr() : alloc{}, memory{nullptr}, dimension{0} {}
+		explicit basic_ptr(std::size_t dim, const U &all = U{}) : alloc{all}, memory{nullptr}, dimension{0} {
 			if(dim>0){
 				dimension = dim;
 				memory = std::allocator_traits<U>::allocate(alloc, dim);

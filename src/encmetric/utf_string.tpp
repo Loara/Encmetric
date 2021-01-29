@@ -191,7 +191,7 @@ adv_string_view<T> adv_string_view<T>::substring(size_t b, size_t e, bool ign) c
 			nei.next();
 		size_t nlen = 0;
 		const_tchar_pt<T> temp = nei;
-		for(int i=0; i<(e-b); i++)
+		for(size_t i=0; i<(e-b); i++)
 			nlen += temp.next();
 		return adv_string_view<T>{e - b, nlen, nei};
 	}
@@ -423,7 +423,7 @@ adv_string<T, U>::adv_string(const_tchar_pt<T> ptr, size_t len, size_t siz, basi
 
 //ignore the memory pointed bu ptr, use the memory pointed by by
 template<typename T, typename U>
-adv_string<T, U>::adv_string(const_tchar_pt<T> ptr, size_t len, size_t siz, basic_ptr<byte, U> by, int ignore) : adv_string_view<T>{len, siz, ptr.new_instance(by.memory)}, bind{std::move(by)} {}
+adv_string<T, U>::adv_string(const_tchar_pt<T> ptr, size_t len, size_t siz, basic_ptr<byte, U> by, [[maybe_unused]] int ignore) : adv_string_view<T>{len, siz, ptr.new_instance(by.memory)}, bind{std::move(by)} {}
 
 
 template<typename T, typename U>

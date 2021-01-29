@@ -55,7 +55,7 @@ int UTF16<be>::to_unicode(unicode &uni, const byte *by, size_t l){
 		y_byte = 2;
 
 	if(l < y_byte)
-		throw encoding_error("Not enough bytes");
+		return 0;
 
 	if(y_byte == 4){
 		byte buf[4];

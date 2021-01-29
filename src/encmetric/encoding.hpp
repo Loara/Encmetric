@@ -33,7 +33,9 @@
         respect to this encoding. This function sets also the character length in the second argument if
         it is valid (if the character is not valid the status of this argument is undefined). 
      - int to_unicode(unicode &, const byte *, int)  => sets the Unicode code of the first encoded characters
+        and returns the number of bytes read. If there aren't enough bytes it must return 0
      - int from_unicode(unicode , byte *, int)  => encode the Unicode character and writes it in the memory pointed
+        and returns the number of bytes written. If there isn't enough space it must return 0
 
      Both have a integer parameter that represents the size of the string/buffer, and returns the nunber of bytes
      read/written. If the string parameter in to_unicode is too small return 0 without throw an exception 

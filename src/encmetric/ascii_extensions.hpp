@@ -36,7 +36,7 @@ class ASCII_extension{
 		static bool validChar(const byte *, int &chlen) noexcept {chlen=1; return true;}
 		static int to_unicode(unicode &uni, const byte *by, size_t l){
 			if(l == 0)
-				throw encoding_error("Not enough bytes");
+				return 0;
 			if(bit_zero(*by, 7)){
 				uni = to_integer<unicode>(by[0]);
 				return 1;
@@ -50,7 +50,7 @@ class ASCII_extension{
 		}
 		static int from_unicode(unicode uni, byte *by, size_t l){
 			if(l <= 0)
-				throw encoding_error("Not enough bytes");
+				return 0;
 			if(uni < 0x80){
 				*by = byte{static_cast<uint8_t>(uni)};
 				return 1;

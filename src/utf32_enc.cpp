@@ -21,6 +21,7 @@
 namespace adv{
 template<bool be>
 bool UTF32<be>::validChar(const byte *data, int &add) noexcept{
+	add = 0;
 	if(access(data, be, 4, 0) != byte{0})
 		return false;
 	byte rew = access(data, be, 4, 1);
@@ -28,13 +29,14 @@ bool UTF32<be>::validChar(const byte *data, int &add) noexcept{
 		return false;
 	if(bit_one(rew, 4) && !bit_zero(rew, 3, 2, 1, 0))
 		return false;
+	add = 4;
 	return true;
 }
 
 template<bool be>
 int UTF32<be>::to_unicode(unicode &uni, const byte *by, size_t l){
 	if(l < 4)
-		throw encoding_error("Not enough bytes");
+		return 0;
 	uni = 0;
 	for(int i=0; i<4; i++){
 		uni = (uni << 8) + to_integer<unicode>(access(by, be, 4, i));
@@ -44,6 +46,8 @@ int UTF32<be>::to_unicode(unicode &uni, const byte *by, size_t l){
 
 template<bool be>
 int UTF32<be>::from_unicode(unicode uni, byte *by, size_t l){
+	if(l < 4)
+		return 0;
 	byte temp[4];
 	for(int i=0; i<4; i++){
 		temp[3-i] = byte{static_cast<uint8_t>(uni & 0xff)};

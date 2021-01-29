@@ -99,7 +99,7 @@ inline bool compare(const byte *a, const byte *b, int nsiz) noexcept{
 template<typename RET, typename IntegerType>
 constexpr RET compose_bit_mask(IntegerType bit){
 	static_assert(std::is_integral_v<IntegerType>, "Not integral type");
-	if(bit < 0 || bit >= (sizeof(RET)*8))
+	if(bit < 0 || static_cast<size_t>(bit) >= (sizeof(RET)*8))
 		throw std::out_of_range("Invalid bit position");
 	return RET{1} << bit;
 }
