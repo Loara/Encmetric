@@ -89,11 +89,11 @@ int UTF8::to_unicode(unicode &uni, const byte *by, size_t l){
 
 	if(l < ((size_t)y_byte) )
 		throw encoding_error("Not enough bytes");
-	uni = std::to_integer<unicode>(b);
+	uni = to_integer<unicode>(b);
 	for(int i = 1; i < y_byte; i++){
 		byte temp = by[i];
 		reset_bits(temp, 6, 7);
-		uni = (uni << 6) + std::to_integer<unicode>(temp);
+		uni = (uni << 6) + to_integer<unicode>(temp);
 	}
 	return y_byte;
 }
@@ -122,11 +122,11 @@ int UTF8::from_unicode(unicode uni, byte *by, size_t l){
 	if(l < ((size_t)y_byte) )
 		return 0;
 	for(int i = y_byte-1; i>=1; i--){
-		by[i] = byte{static_cast<unsigned char>(uni & 0x3f)};
+		by[i] = byte{static_cast<uint8_t>(uni & 0x3f)};
 		uni >>= 6;
 		set_bits(by[i], 7);
 	}
-	by[0] = byte{static_cast<unsigned char>(uni)};
+	by[0] = byte{static_cast<uint8_t>(uni)};
 	by[0] |= set_mask;
 	return y_byte;
 }

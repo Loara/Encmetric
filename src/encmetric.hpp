@@ -16,15 +16,5 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Encmetric. If not, see <http://www.gnu.org/licenses/>.
 */
-#include <encmetric/ascii_extensions.hpp>
 
-namespace adv{
-
-using ISO_8859_1 = Latin1;
-
-class ISO_8859_2 : public ASCII_extension<ISO_8859_2>{
-	public:
-		static const unicode table[];
-};
-
-}
+#include <encmetric/enc_strings.hpp>

@@ -52,7 +52,7 @@ class base_tchar_pt{
 
 	protected:
 		data_type *ptr;
-		explicit base_tchar_pt(data_type *b) : ptr{b} {}
+		explicit constexpr base_tchar_pt(data_type *b) : ptr{b} {}
 	public:
 		/*
 		    Raw pointer
@@ -165,7 +165,7 @@ class base_tchar_pt{
 template<typename T, typename U>
 class wbase_tchar_pt : public base_tchar_pt<T, U, byte>{
 	public:
-		explicit wbase_tchar_pt(byte *b) : base_tchar_pt<T, U, byte>{b} {}
+		explicit constexpr wbase_tchar_pt(byte *b) : base_tchar_pt<T, U, byte>{b} {}
 		
 		int b_from_unicode(unicode uni, size_t l) const {return this->mycast()->from_unicode(uni, l);}
 };
@@ -180,9 +180,9 @@ class const_tchar_pt : public base_tchar_pt<T, const_tchar_pt<T>, byte const>{
 	public:
 		using static_enc = T;
 
-		explicit const_tchar_pt() : base_tchar_pt<T, const_tchar_pt<T>, byte const>{nullptr} {}
-		explicit const_tchar_pt(const byte *c) : base_tchar_pt<T, const_tchar_pt<T>, byte const>{c} {}
-		explicit const_tchar_pt(const char *c) : const_tchar_pt{(const byte *)c} {}
+		explicit constexpr const_tchar_pt() : base_tchar_pt<T, const_tchar_pt<T>, byte const>{nullptr} {}
+		explicit constexpr const_tchar_pt(const byte *c) : base_tchar_pt<T, const_tchar_pt<T>, byte const>{c} {}
+		explicit constexpr const_tchar_pt(const char *c) : const_tchar_pt{(const byte *)c} {}
 
 		const EncMetric &format() const noexcept {return DynEncoding<T>::instance();}
 		int unity() const noexcept {return T::unity();}

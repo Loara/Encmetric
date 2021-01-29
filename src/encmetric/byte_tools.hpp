@@ -25,7 +25,67 @@
 #include <stdexcept>
 
 namespace adv{
-using std::byte;
+//using std::byte;
+/*
+    Needed an 8-bit byte in order to work with encodings
+*/
+using std::uint8_t;
+enum byte : uint8_t {};
+
+template<typename T, std::enable_if_t<std::is_integral_v<T>, int> =0>
+constexpr T to_integer(byte b) noexcept{
+	return T{b};
+}
+
+template<typename T, std::enable_if_t<std::is_integral_v<T>, int> =0>
+constexpr byte operator<<(byte b, T shift) noexcept{
+	return byte{static_cast<uint8_t>(static_cast<unsigned int>(b) << shift)};
+}
+template<typename T, std::enable_if_t<std::is_integral_v<T>, int> =0>
+constexpr byte operator>>(byte b, T shift) noexcept{
+	return byte{static_cast<uint8_t>(static_cast<unsigned int>(b) >> shift)};
+}
+
+template<typename T, std::enable_if_t<std::is_integral_v<T>, int> =0>
+constexpr byte operator<<=(byte &b, T shift) noexcept{
+	b = b << shift;
+	return b;
+}
+template<typename T, std::enable_if_t<std::is_integral_v<T>, int> =0>
+constexpr byte operator>>=(byte &b, T shift) noexcept{
+	b = b >> shift;
+	return b;
+}
+
+constexpr byte operator|(byte b, byte mask) noexcept{
+	return byte{static_cast<uint8_t>(static_cast<unsigned int>(b) | static_cast<unsigned int>(mask))};
+}
+constexpr byte operator&(byte b, byte mask) noexcept{
+	return byte{static_cast<uint8_t>(static_cast<unsigned int>(b) & static_cast<unsigned int>(mask))};
+}
+constexpr byte operator^(byte b, byte mask) noexcept{
+	return byte{static_cast<uint8_t>(static_cast<unsigned int>(b) ^ static_cast<unsigned int>(mask))};
+}
+constexpr byte operator~(byte b) noexcept{
+	return byte{static_cast<uint8_t>(~ static_cast<unsigned int>(b))};
+}
+constexpr byte operator-(byte b) noexcept{
+	return byte{static_cast<uint8_t>(- static_cast<unsigned int>(b))};
+}
+
+
+constexpr byte operator|=(byte &b, byte mask) noexcept{
+	b = b | mask;
+	return b;
+}
+constexpr byte operator&=(byte &b, byte mask) noexcept{
+	b = b & mask;
+	return b;
+}
+constexpr byte operator^=(byte &b, byte mask) noexcept{
+	b = b ^ mask;
+	return b;
+}
 
 inline bool compare(const byte *a, const byte *b, int nsiz) noexcept{
 	return std::memcmp(a, b, nsiz) == 0;

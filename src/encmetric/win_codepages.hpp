@@ -19,12 +19,12 @@
 #include <encmetric/ascii_extensions.hpp>
 
 namespace adv{
-
-using ISO_8859_1 = Latin1;
-
-class ISO_8859_2 : public ASCII_extension<ISO_8859_2>{
-	public:
-		static const unicode table[];
-};
-
+	class Win_1252 : ASCII_extension<Win_1252>{
+		public:
+			static const unicode table[];
+	};
+	class Win_1250 : ASCII_extension<Win_1250>{
+		public:
+			static const unicode table[];
+	};
 }
