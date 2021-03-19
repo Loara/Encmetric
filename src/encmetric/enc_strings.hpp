@@ -20,6 +20,7 @@
 #include <encmetric/all_enc.hpp>
 #include <encmetric/config.hpp>
 #include <type_traits>
+#include <iostream>
 
 namespace adv{
 
@@ -67,6 +68,8 @@ inline adv_string_view<UTF16<bend>> getstring_16(const char16_t *c){
 
 inline adv_string_view<UTF16<bend>> getstring_16(const char16_t *c, size_t len){
 	return adv_string_view<UTF16<bend>>{const_tchar_pt<UTF16<bend>>{(const byte *)c}, len*2, false};
+
+
 }
 
 /*
