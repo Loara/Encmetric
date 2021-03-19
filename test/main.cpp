@@ -1,4 +1,4 @@
-#include <encmetric/enc_strings.hpp>
+#include <encmetric.hpp>
 #include <encmetric/tokens.hpp>
 #include <iostream>
 
@@ -19,11 +19,11 @@ int main(){
 		std::cout << t.proceed(del) << std::endl;
 	byte b;
 	ISO_8859_2::from_unicode(0x13a, &b, 1);
-	std::cout << std::hex << std::to_integer<int>(b) << std::endl;
+	std::cout << std::hex << to_integer<int>(b) << std::endl;
 	ISO_8859_2::from_unicode(0x1a, &b, 1);
-	std::cout << std::hex << std::to_integer<int>(b) << std::endl;
+	std::cout << std::hex << to_integer<int>(b) << std::endl;
 	ISO_8859_2::from_unicode(0x163, &b, 1);
-	std::cout << std::hex << std::to_integer<int>(b) << std::endl;
+	std::cout << std::hex << to_integer<int>(b) << std::endl;
 	b = byte{0xec};
 	unicode u;
 	ISO_8859_2::to_unicode(u, &b, 1);

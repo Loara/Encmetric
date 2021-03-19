@@ -16,62 +16,13 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Encmetric. If not, see <http://www.gnu.org/licenses/>.
 */
-#include <encmetric/encoding.hpp>
+#include <encmetric/ascii_extensions.hpp>
 
 namespace adv{
 
-/*
-    Basic class for every ISO-8859-n encoding based on a table search.
-
-    Enc is the class specialization, must have a public static array of unicode
-    member table for each character from A0 to FF
-*/
-template<typename Enc>
-class ISO_8859_basic{
-	public:
-		static constexpr int unity() noexcept {return 1;}
-		static int chLen(const byte *) {return 1;}
-		static bool validChar(const byte *, int &chlen) noexcept {chlen=1; return true;}
-		static int to_unicode(unicode &uni, const byte *by, int l){
-			if(l <= 0)
-				throw encoding_error("Not enough bytes");
-			if(bit_zero(*by, 7) || bit_zero(*by, 5, 6)){
-				uni = std::to_integer<unicode>(by[0]);
-				return 1;
-			}
-			else{
-				int idx = std::to_integer<int>(by[0]);
-				idx -= 0xa0;
-				uni = Enc::table[idx];
-				return 1;
-			}
-		}
-		static int from_unicode(unicode uni, byte *by, int l){
-			if(l <= 0)
-				throw encoding_error("Not enough bytes");
-			if(uni < 0xa0){
-				*by = byte{static_cast<unsigned char>(uni & 0xff)};
-				return 1;
-			}
-			else{
-				int idx = -1;
-				for(int i=0; i < (6*16); i++){
-					if(Enc::table[i] == uni){
-						idx = i;
-						break;
-					}
-				}
-				if(idx == -1)
-					throw encoding_error("Cannot convert to a ISO-8859 character");
-				*by = byte{static_cast<unsigned char>(idx + 0xa0)};
-				return 1;
-			}
-		}
-};
-
 using ISO_8859_1 = Latin1;
 
-class ISO_8859_2 : public ISO_8859_basic<ISO_8859_2>{
+class ISO_8859_2 : public ASCII_extension<ISO_8859_2>{
 	public:
 		static const unicode table[];
 };

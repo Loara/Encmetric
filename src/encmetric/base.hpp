@@ -26,10 +26,6 @@
 namespace adv{
 using std::size_t;
 using unicode = std::uint_least32_t;
-/*
-    UNICODE needs only 4 bytes to store bytes
-*/
-inline constexpr int max_char_byte = 4;
 inline constexpr unicode BOM = 0xFEFF;
 
 }

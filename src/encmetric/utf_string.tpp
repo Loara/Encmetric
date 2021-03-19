@@ -33,35 +33,46 @@ template<typename T>
 void deduce_lens(const_tchar_pt<T> ptr, size_t dim, bool issiz, size_t &len, size_t &siz){
 	len = 0;
 	siz = 0;
-	int add;
-	size_t oldim;
+	if constexpr(fixed_size<T>){
+		if(issiz){
+			len = dim / T::unity();
+		}
+		else{
+			len = dim;
+		}
+		siz = len * T::unity();
+	}
+	else{
+		int add;
+		size_t oldim;
 
-	if(issiz){
-		try{
-			add = ptr.next();
-			oldim = dim;
-			dim -= add;
-			while(dim < oldim){//Overflow test for unsigned integer
-				siz += add;
-				len++;
-				if(dim == 0)
-					break;
+		if(issiz){
+			try{
 				add = ptr.next();
 				oldim = dim;
 				dim -= add;
+				while(dim < oldim){//Overflow test for unsigned integer
+					siz += add;
+					len++;
+					if(dim == 0)
+						break;
+					add = ptr.next();
+					oldim = dim;
+					dim -= add;
+				}
 			}
+			catch(const encoding_error &){}
 		}
-		catch(const encoding_error &){}
-	}
-	else{
-		try{
-			for(size_t i=0; i<dim; i++){
-				add = ptr.next();
-				siz += add;
-				len++;
+		else{
+			try{
+				for(size_t i=0; i<dim; i++){
+					add = ptr.next();
+					siz += add;
+					len++;
+				}
 			}
+			catch(const encoding_error &){}
 		}
-		catch(const encoding_error &){}
 	}
 }
 //-----------------------
@@ -77,17 +88,25 @@ adv_string_view<T>::adv_string_view(const_tchar_pt<T> cu, size_t dim, bool isdim
 
 template<typename T>
 adv_string_view<T>::adv_string_view(const_tchar_pt<T> cu, size_t size, size_t lent) : ptr{cu}, len{0}, siz{0}{
-	int add;
-	size_t olsiz;
-	for(size_t i=0; i<lent; i++){
-		add = cu.next();
-		olsiz = size;
-		size -= add;
-		siz += add;
-		if(size >= olsiz)
-			throw encoding_error("Too small string");
+	if constexpr(fixed_size<T>){
+		if(size / T::unity() < lent)
+			throw encoding_error("Too small string");//prevent integer overflow due to multiplication
+		len = lent;
+		siz = lent * T::unity(); //may be siz < size
 	}
-	len = lent;
+	else{
+		int add;
+		size_t olsiz;
+		for(size_t i=0; i<lent; i++){
+			add = cu.next();
+			olsiz = size;
+			size -= add;
+			siz += add;
+			if(size >= olsiz)
+				throw encoding_error("Too small string");
+		}
+		len = lent;
+	}
 }
 
 template<typename T>
@@ -115,20 +134,43 @@ bool adv_string_view<T>::verify_safe() const noexcept{
 }
 
 template<typename T>
+const_tchar_pt<T> adv_string_view<T>::at(size_t chr) const{
+	if(chr > len)
+		throw std::out_of_range{"Out of range"};
+	if(chr == 0)
+		return ptr;
+	if constexpr(fixed_size<T>){
+		return ptr + (chr * T::unity());
+	}
+	else{
+		const_tchar_pt<T> ret = ptr;
+		if(chr == len)
+			return ret + siz;
+		for(size_t i=0; i< chr; i++)
+			ret.next();
+		return ret;
+	}
+};
+
+template<typename T>
 size_t adv_string_view<T>::size(size_t a, size_t n) const{
 	if(a+n < n || a+n > len)
 		throw std::out_of_range{"Out of range"};
 	if(n == 0)
 		return 0;
-	const_tchar_pt<T> mem = ptr;
-	for(size_t i=0; i<a; i++){
-		mem.next();
+	if constexpr (fixed_size<T>){
+		return n * T::unity();
 	}
-	size_t ret = 0;
-	for(size_t i=0; i<n; i++){
-		ret += mem.next();
+	else{
+		const_tchar_pt<T> mem = ptr;
+		for(size_t i=0; i<a; i++)
+			mem.next();
+		size_t ret = 0;
+		for(size_t i=0; i<n; i++){
+			ret += mem.next();
+		}
+		return ret;
 	}
-	return ret;
 }
 
 template<typename T>
@@ -139,11 +181,20 @@ adv_string_view<T> adv_string_view<T>::substring(size_t b, size_t e, bool ign) c
 		e = len;
 	if(b > e)
 		b = e;
-	const_tchar_pt<T> nei = ptr;
-	for(size_t i=0; i<b; i++)
-		nei.next();
-	size_t nlen = size(b, e-b);
-	return adv_string_view<T>{nei, e - b, nlen};
+	if constexpr(fixed_size<T>){
+		const_tchar_pt<T> nei = ptr + (b * T::unity());
+		return adv_string_view<T>{e-b, (e-b) * T::unity(), nei};
+	}
+	else{
+		const_tchar_pt<T> nei = ptr;
+		for(size_t i=0; i<b; i++)
+			nei.next();
+		size_t nlen = 0;
+		const_tchar_pt<T> temp = nei;
+		for(size_t i=0; i<(e-b); i++)
+			nlen += temp.next();
+		return adv_string_view<T>{e - b, nlen, nei};
+	}
 }
 
 template<typename T> template<typename S>
@@ -372,7 +423,7 @@ adv_string<T, U>::adv_string(const_tchar_pt<T> ptr, size_t len, size_t siz, basi
 
 //ignore the memory pointed bu ptr, use the memory pointed by by
 template<typename T, typename U>
-adv_string<T, U>::adv_string(const_tchar_pt<T> ptr, size_t len, size_t siz, basic_ptr<byte, U> by, int ignore) : adv_string_view<T>{len, siz, ptr.new_instance(by.memory)}, bind{std::move(by)} {}
+adv_string<T, U>::adv_string(const_tchar_pt<T> ptr, size_t len, size_t siz, basic_ptr<byte, U> by, [[maybe_unused]] int ignore) : adv_string_view<T>{len, siz, ptr.new_instance(by.memory)}, bind{std::move(by)} {}
 
 
 template<typename T, typename U>

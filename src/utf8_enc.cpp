@@ -63,7 +63,7 @@ bool UTF8::validChar(const byte *data, int &add) noexcept{
 }
 
 int UTF8::to_unicode(unicode &uni, const byte *by, size_t l){
-	int y_byte = 0;
+	size_t y_byte = 0;
 	byte b = *by;
 	uni = 0;
 	
@@ -87,22 +87,22 @@ int UTF8::to_unicode(unicode &uni, const byte *by, size_t l){
 	else
 		throw encoding_error("Invalid utf8 character");
 
-	if(l < ((size_t)y_byte) )
-		throw encoding_error("Not enough bytes");
-	uni = std::to_integer<unicode>(b);
-	for(int i = 1; i < y_byte; i++){
+	if(l < y_byte )
+		return 0;
+	uni = to_integer<unicode>(b);
+	for(size_t i = 1; i < y_byte; i++){
 		byte temp = by[i];
 		reset_bits(temp, 6, 7);
-		uni = (uni << 6) + std::to_integer<unicode>(temp);
+		uni = (uni << 6) + to_integer<unicode>(temp);
 	}
 	return y_byte;
 }
 
 int UTF8::from_unicode(unicode uni, byte *by, size_t l){
-	int y_byte;
+	size_t y_byte;
 	byte set_mask{0};
 	//byte reset_mask{0}; Non è necessario
-	if(uni >= 0 && uni < 0x80){
+	if(uni < 0x80){
 		y_byte = 1;
 	}
 	else if(uni >= 0x80 && uni < 0x800){
@@ -119,14 +119,14 @@ int UTF8::from_unicode(unicode uni, byte *by, size_t l){
 	}
 	else throw encoding_error("Not Unicode character");
 
-	if(l < ((size_t)y_byte) )
+	if(l < y_byte )
 		return 0;
-	for(int i = y_byte-1; i>=1; i--){
-		by[i] = byte{static_cast<unsigned char>(uni & 0x3f)};
+	for(size_t i = y_byte-1; i>=1; i--){
+		by[i] = byte{static_cast<uint8_t>(uni & 0x3f)};
 		uni >>= 6;
 		set_bits(by[i], 7);
 	}
-	by[0] = byte{static_cast<unsigned char>(uni)};
+	by[0] = byte{static_cast<uint8_t>(uni)};
 	by[0] |= set_mask;
 	return y_byte;
 }

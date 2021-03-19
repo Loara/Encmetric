@@ -16,28 +16,15 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Encmetric. If not, see <http://www.gnu.org/licenses/>.
 */
-#include <encmetric/chite.hpp>
-#include <encmetric/byte_tools.hpp>
+#include <encmetric/ascii_extensions.hpp>
 
 namespace adv{
-
-template<bool be>
-class UTF32{
-	public:
-		static constexpr int unity() noexcept {return 4;}
-		static constexpr bool has_max() noexcept {return true;}
-		static constexpr int max_bytes() noexcept {return 4;}
-		static int chLen(const byte *){ return 4;}
-		static bool validChar(const byte *, int &chlen) noexcept;
-		static int to_unicode(unicode &uni, const byte *by, size_t l);
-		static int from_unicode(unicode uni, byte *by, size_t l);
-};
-
-using UTF32LE = UTF32<false>;
-using UTF32BE = UTF32<true>;
-
-#ifndef encmetric_library
-extern template class UTF32<true>;
-extern template class UTF32<false>;
-#endif
+	class Win_1252 : ASCII_extension<Win_1252>{
+		public:
+			static const unicode table[];
+	};
+	class Win_1250 : ASCII_extension<Win_1250>{
+		public:
+			static const unicode table[];
+	};
 }

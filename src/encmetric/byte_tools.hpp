@@ -25,7 +25,67 @@
 #include <stdexcept>
 
 namespace adv{
-using std::byte;
+//using std::byte;
+/*
+    Needed an 8-bit byte in order to work with encodings
+*/
+using std::uint8_t;
+enum byte : uint8_t {};
+
+template<typename T, std::enable_if_t<std::is_integral_v<T>, int> =0>
+constexpr T to_integer(byte b) noexcept{
+	return T{b};
+}
+
+template<typename T, std::enable_if_t<std::is_integral_v<T>, int> =0>
+constexpr byte operator<<(byte b, T shift) noexcept{
+	return byte{static_cast<uint8_t>(static_cast<unsigned int>(b) << shift)};
+}
+template<typename T, std::enable_if_t<std::is_integral_v<T>, int> =0>
+constexpr byte operator>>(byte b, T shift) noexcept{
+	return byte{static_cast<uint8_t>(static_cast<unsigned int>(b) >> shift)};
+}
+
+template<typename T, std::enable_if_t<std::is_integral_v<T>, int> =0>
+constexpr byte operator<<=(byte &b, T shift) noexcept{
+	b = b << shift;
+	return b;
+}
+template<typename T, std::enable_if_t<std::is_integral_v<T>, int> =0>
+constexpr byte operator>>=(byte &b, T shift) noexcept{
+	b = b >> shift;
+	return b;
+}
+
+constexpr byte operator|(byte b, byte mask) noexcept{
+	return byte{static_cast<uint8_t>(static_cast<unsigned int>(b) | static_cast<unsigned int>(mask))};
+}
+constexpr byte operator&(byte b, byte mask) noexcept{
+	return byte{static_cast<uint8_t>(static_cast<unsigned int>(b) & static_cast<unsigned int>(mask))};
+}
+constexpr byte operator^(byte b, byte mask) noexcept{
+	return byte{static_cast<uint8_t>(static_cast<unsigned int>(b) ^ static_cast<unsigned int>(mask))};
+}
+constexpr byte operator~(byte b) noexcept{
+	return byte{static_cast<uint8_t>(~ static_cast<unsigned int>(b))};
+}
+constexpr byte operator-(byte b) noexcept{
+	return byte{static_cast<uint8_t>(- static_cast<unsigned int>(b))};
+}
+
+
+constexpr byte operator|=(byte &b, byte mask) noexcept{
+	b = b | mask;
+	return b;
+}
+constexpr byte operator&=(byte &b, byte mask) noexcept{
+	b = b & mask;
+	return b;
+}
+constexpr byte operator^=(byte &b, byte mask) noexcept{
+	b = b ^ mask;
+	return b;
+}
 
 inline bool compare(const byte *a, const byte *b, int nsiz) noexcept{
 	return std::memcmp(a, b, nsiz) == 0;
@@ -39,7 +99,7 @@ inline bool compare(const byte *a, const byte *b, int nsiz) noexcept{
 template<typename RET, typename IntegerType>
 constexpr RET compose_bit_mask(IntegerType bit){
 	static_assert(std::is_integral_v<IntegerType>, "Not integral type");
-	if(bit < 0 || bit >= (sizeof(RET)*8))
+	if(bit < 0 || static_cast<size_t>(bit) >= (sizeof(RET)*8))
 		throw std::out_of_range("Invalid bit position");
 	return RET{1} << bit;
 }
@@ -70,6 +130,7 @@ constexpr bool bit_one(B test, T... all){
      - set_bits sets these bits
      - reset_bits resets these bits
      - leave_bits resets all the remaining bits leaving the remaining unchanged
+     - swap_bits swaps these bits
 */
 template<typename B, typename... T>
 constexpr void set_bits(B &mask, T... all){
@@ -84,6 +145,11 @@ constexpr void reset_bits(B &mask, T... all){
 template<typename B, typename... T>
 constexpr void leave_bits(B &mask, T... all){
 	mask &= compose_bit_mask<B>(all...);
+}
+
+template<typename B, typename... T>
+constexpr void swap_bits(B &mask, T... all){
+	mask ^= compose_bit_mask<B>(all...);
 }
 
 /*

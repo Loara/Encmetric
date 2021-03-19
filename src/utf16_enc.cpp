@@ -55,7 +55,7 @@ int UTF16<be>::to_unicode(unicode &uni, const byte *by, size_t l){
 		y_byte = 2;
 
 	if(l < y_byte)
-		throw encoding_error("Not enough bytes");
+		return 0;
 
 	if(y_byte == 4){
 		byte buf[4];
@@ -64,14 +64,14 @@ int UTF16<be>::to_unicode(unicode &uni, const byte *by, size_t l){
 		leave_bits(buf[0], 0, 1);
 		leave_bits(buf[2], 0, 1);
 		
-		unicode p_word = (std::to_integer<unicode>(buf[0]) << 8) + std::to_integer<unicode>(buf[1]);
-		unicode s_word = (std::to_integer<unicode>(buf[2]) << 8) + std::to_integer<unicode>(buf[3]);
+		unicode p_word = (to_integer<unicode>(buf[0]) << 8) + to_integer<unicode>(buf[1]);
+		unicode s_word = (to_integer<unicode>(buf[2]) << 8) + to_integer<unicode>(buf[3]);
 		uni = (p_word << 10) + s_word + 0x10000;
 	}
 	else{
 		byte buf[2];
 		copy_end(by, 2, be, buf, 2);		
-		uni = (std::to_integer<unicode>(buf[0]) << 8) + std::to_integer<unicode>(buf[1]);
+		uni = (to_integer<unicode>(buf[0]) << 8) + to_integer<unicode>(buf[1]);
 	}
 	return y_byte;
 }
@@ -93,13 +93,13 @@ int UTF16<be>::from_unicode(unicode uni, byte *by, size_t l){
 	if(y_byte == 4){
 		uni -= 0x10000;
 		byte temp[4];
-		temp[3] = byte{static_cast<unsigned char>(uni & 0xff)};
+		temp[3] = byte{static_cast<uint8_t>(uni & 0xff)};
 		uni >>= 8;
-		temp[2] = byte{static_cast<unsigned char>(uni & 0x03)};
+		temp[2] = byte{static_cast<uint8_t>(uni & 0x03)};
 		uni >>= 2;
-		temp[1] = byte{static_cast<unsigned char>(uni & 0xff)};
+		temp[1] = byte{static_cast<uint8_t>(uni & 0xff)};
 		uni >>= 8;
-		temp[0] = byte{static_cast<unsigned char>(uni & 0x03)};
+		temp[0] = byte{static_cast<uint8_t>(uni & 0x03)};
 
 		set_bits(temp[2], 7, 6, 4, 3, 2);
 		set_bits(temp[0], 7, 6, 4, 3);
@@ -107,9 +107,9 @@ int UTF16<be>::from_unicode(unicode uni, byte *by, size_t l){
 	}
 	else{
 		byte temp[2];
-		temp[1] = byte{static_cast<unsigned char>(uni & 0xff)};
+		temp[1] = byte{static_cast<uint8_t>(uni & 0xff)};
 		uni >>= 8;
-		temp[0] = byte{static_cast<unsigned char>(uni & 0xff)};
+		temp[0] = byte{static_cast<uint8_t>(uni & 0xff)};
 		copy_end(temp, 2, be, by, 2);
 	}
 	return y_byte;
