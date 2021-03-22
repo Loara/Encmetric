@@ -30,11 +30,11 @@ namespace adv{
     Needed an 8-bit byte in order to work with encodings
 */
 using std::uint8_t;
-enum byte : uint8_t {};
+enum class byte : uint8_t {};
 
 template<typename T, std::enable_if_t<std::is_integral_v<T>, int> =0>
 constexpr T to_integer(byte b) noexcept{
-	return T{b};
+	return static_cast<T>(b);
 }
 
 template<typename T, std::enable_if_t<std::is_integral_v<T>, int> =0>

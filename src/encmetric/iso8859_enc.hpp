@@ -24,7 +24,7 @@ using ISO_8859_1 = Latin1;
 
 class ISO_8859_2 : public ASCII_extension<ISO_8859_2>{
 	public:
-		static const unicode table[];
+		static const unsigned int table[];
 };
 
 }

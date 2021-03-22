@@ -22,10 +22,17 @@
 */
 #include <cstdint>
 #include <encmetric/byte_tools.hpp>
+#include <type_traits>
 
 namespace adv{
 using std::size_t;
-using unicode = std::uint_least32_t;
-inline constexpr unicode BOM = 0xFEFF;
+enum unicode : std::uint_least32_t {};
+
+inline unicode read_unicode(byte b){
+	return unicode{static_cast<std::uint_least32_t>(b)};
+}
+
+inline constexpr unicode BOM{0xFEFF};
 
 }
+

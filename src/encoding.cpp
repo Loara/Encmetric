@@ -34,14 +34,14 @@ bool ASCII::validChar(const byte *data, int &add) noexcept{
 	return true;
 }
 
-int ASCII::to_unicode(unicode &uni, const byte *by, size_t l){
+int ASCII::decode(unicode *uni, const byte *by, size_t l){
 	if(l == 0)
 		throw encoding_error("Not enough bytes");
-	uni = to_integer<unicode>(by[0]);
+	*uni = read_unicode(by[0]);
 	return 1;
 }
 
-int ASCII::from_unicode(unicode uni, byte *by, size_t l){
+int ASCII::encode(const unicode &uni, byte *by, size_t l){
 	if(l == 0)
 		throw encoding_error("Not enough bytes");
 	if(uni >= 128)
@@ -61,14 +61,14 @@ bool Latin1::validChar(const byte *, int &add) noexcept{
 	return true;
 }
 
-int Latin1::to_unicode(unicode &uni, const byte *by, size_t l){
+int Latin1::decode(unicode *uni, const byte *by, size_t l){
 	if(l == 0)
 		return 0;
-	uni = to_integer<unicode>(by[0]);
+	*uni = read_unicode(by[0]);
 	return 1;
 }
 
-int Latin1::from_unicode(unicode uni, byte *by, size_t l){
+int Latin1::encode(const unicode &uni, byte *by, size_t l){
 	if(l == 0)
 		return 0;
 	if(uni >= 256)

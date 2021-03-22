@@ -45,7 +45,7 @@ bool UTF16<be>::validChar(const byte *data, int &add) noexcept{
 }
 
 template<bool be>
-int UTF16<be>::to_unicode(unicode &uni, const byte *by, size_t l){
+int UTF16<be>::decode(unicode *uni, const byte *by, size_t l){
 	int y_byte = 0;
 	uni = 0;
 	
@@ -64,25 +64,25 @@ int UTF16<be>::to_unicode(unicode &uni, const byte *by, size_t l){
 		leave_bits(buf[0], 0, 1);
 		leave_bits(buf[2], 0, 1);
 		
-		unicode p_word = (to_integer<unicode>(buf[0]) << 8) + to_integer<unicode>(buf[1]);
-		unicode s_word = (to_integer<unicode>(buf[2]) << 8) + to_integer<unicode>(buf[3]);
-		uni = (p_word << 10) + s_word + 0x10000;
+		unicode p_word{(read_unicode(buf[0]) << 8) + read_unicode(buf[1])};
+		unicode s_word{(read_unicode(buf[2]) << 8) + read_unicode(buf[3])};
+		*uni = unicode{(p_word << 10) + s_word + 0x10000};
 	}
 	else{
 		byte buf[2];
 		copy_end(by, 2, be, buf, 2);		
-		uni = (to_integer<unicode>(buf[0]) << 8) + to_integer<unicode>(buf[1]);
+		*uni = unicode{(read_unicode(buf[0]) << 8) + read_unicode(buf[1])};
 	}
 	return y_byte;
 }
 
 template<bool be>
-int UTF16<be>::from_unicode(unicode uni, byte *by, size_t l){
+int UTF16<be>::encode(const unicode &unin, byte *by, size_t l){
 	int y_byte;
-	if(uni >= 0 && uni < 0xffff){
+	if(unin >= 0 && unin < 0xffff){
 		y_byte = 2;
 	}
-	else if(uni >= 0x10000 && uni < 0x110000){
+	else if(unin >= 0x10000 && unin < 0x110000){
 		y_byte = 4;
 	}
 	else throw encoding_error("Not Unicode character");
@@ -91,14 +91,14 @@ int UTF16<be>::from_unicode(unicode uni, byte *by, size_t l){
 		return 0;
 	
 	if(y_byte == 4){
-		uni -= 0x10000;
+		unicode uni{unin - 0x10000};
 		byte temp[4];
 		temp[3] = byte{static_cast<uint8_t>(uni & 0xff)};
-		uni >>= 8;
+		uni=unicode{uni >> 8};
 		temp[2] = byte{static_cast<uint8_t>(uni & 0x03)};
-		uni >>= 2;
+		uni=unicode{uni >> 2};
 		temp[1] = byte{static_cast<uint8_t>(uni & 0xff)};
-		uni >>= 8;
+		uni=unicode{uni >> 8};
 		temp[0] = byte{static_cast<uint8_t>(uni & 0x03)};
 
 		set_bits(temp[2], 7, 6, 4, 3, 2);
@@ -106,9 +106,10 @@ int UTF16<be>::from_unicode(unicode uni, byte *by, size_t l){
 		copy_end(temp, 4, be, by, 2);
 	}
 	else{
+		unicode uni = unin;
 		byte temp[2];
 		temp[1] = byte{static_cast<uint8_t>(uni & 0xff)};
-		uni >>= 8;
+		uni=unicode{uni >> 8};
 		temp[0] = byte{static_cast<uint8_t>(uni & 0xff)};
 		copy_end(temp, 2, be, by, 2);
 	}

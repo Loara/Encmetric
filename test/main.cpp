@@ -18,15 +18,15 @@ int main(){
 	while(!t.eof())
 		std::cout << t.proceed(del) << std::endl;
 	byte b;
-	ISO_8859_2::from_unicode(0x13a, &b, 1);
+	ISO_8859_2::encode(unicode{0x13a}, &b, 1);
 	std::cout << std::hex << to_integer<int>(b) << std::endl;
-	ISO_8859_2::from_unicode(0x1a, &b, 1);
+	ISO_8859_2::encode(unicode{0x1a}, &b, 1);
 	std::cout << std::hex << to_integer<int>(b) << std::endl;
-	ISO_8859_2::from_unicode(0x163, &b, 1);
+	ISO_8859_2::encode(unicode{0x163}, &b, 1);
 	std::cout << std::hex << to_integer<int>(b) << std::endl;
 	b = byte{0xec};
 	unicode u;
-	ISO_8859_2::to_unicode(u, &b, 1);
+	ISO_8859_2::decode(&u, &b, 1);
 	std::cout << std::hex << u << std::endl;
 }
 

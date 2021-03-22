@@ -75,8 +75,8 @@ inline adv_string_view<UTF16<bend>> getstring_16(const char16_t *c, size_t len){
 /*
     Detect utf8, utf16 encoding from BOM, if haven't BOM then throw exception
 */
-inline const EncMetric &detect_bom(adv_string_view<RAW> t){
-	const_tchar_pt<RAW> ptr = t.begin();
+inline const EncMetric<unicode> &detect_bom(adv_string_view<RAW<unicode>> t){
+	const_tchar_pt<RAW<unicode>> ptr = t.begin();
 	if(t.size() < 2)
 		throw encoding_error{"No BOM"};
 	if(ptr[0] == byte{0xfe} && ptr[1] == byte{0xff})

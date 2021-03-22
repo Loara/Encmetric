@@ -65,21 +65,21 @@ class adv_string_view{
 		/*
 		    not-WIDENC costructors
 		*/
-		template<typename U, enable_not_widenc_t<T, int, U> = 0>
+		template<typename U, enable_not_wide_t<T, int, U> = 0>
 		explicit adv_string_view(const U *b) : adv_string_view{const_tchar_pt<T>{b}} {}
-		template<typename U, enable_not_widenc_t<T, int, U> = 0>
+		template<typename U, enable_not_wide_t<T, int, U> = 0>
 		explicit adv_string_view(const U *b, size_t dim, bool dim_is_size) : adv_string_view{const_tchar_pt<T>{b}, dim, dim_is_size} {}
-		template<typename U, enable_not_widenc_t<T, int, U> = 0>
+		template<typename U, enable_not_wide_t<T, int, U> = 0>
 		explicit adv_string_view(const U *b, size_t siz, size_t len) : adv_string_view{const_tchar_pt<T>{b}, siz, len} {}
 		/*
 		    WIDENC costructors
 		*/
-		template<typename U, enable_widenc_t<T, int, U> = 0>
-		explicit adv_string_view(const U *b, const EncMetric &f) : adv_string_view{const_tchar_pt<T>{b, f}} {}
-		template<typename U, enable_widenc_t<T, int, U> = 0>
-		explicit adv_string_view(const U *b, size_t dim, bool dim_is_size, const EncMetric &f) : adv_string_view{const_tchar_pt<T>{b, f}, dim, dim_is_size} {}
-		template<typename U, enable_widenc_t<T, int, U> = 0>
-		explicit adv_string_view(const U *b, size_t siz, size_t len, const EncMetric &f) : adv_string_view{const_tchar_pt<T>{b, f}, siz, len} {}
+		template<typename U, enable_wide_t<T, int, U> = 0>
+		explicit adv_string_view(const U *b, const EncMetric<typename T::ctype> &f) : adv_string_view{const_tchar_pt<T>{b, f}} {}
+		template<typename U, enable_wide_t<T, int, U> = 0>
+		explicit adv_string_view(const U *b, size_t dim, bool dim_is_size, const EncMetric<typename T::ctype> &f) : adv_string_view{const_tchar_pt<T>{b, f}, dim, dim_is_size} {}
+		template<typename U, enable_wide_t<T, int, U> = 0>
+		explicit adv_string_view(const U *b, size_t siz, size_t len, const EncMetric<typename T::ctype> &f) : adv_string_view{const_tchar_pt<T>{b, f}, siz, len} {}
 
 		virtual ~adv_string_view() {}
 		/*
@@ -137,9 +137,9 @@ class adv_string_view{
 		adv_string_view<S> basic_encoding_conversion(tchar_pt<S> buffer, size_t blen) const;
 
 		template<typename S, typename U = std::allocator<byte>>
-		adv_string<S, U> basic_encoding_conversion(const EncMetric &, const U & = U{}, enable_widenc_t<S, int> =0) const;
+		adv_string<S, U> basic_encoding_conversion(const EncMetric<typename S::ctype> &, const U & = U{}, enable_wide_t<S, int> =0) const;
 		template<typename S, typename U = std::allocator<byte>>
-		adv_string<S, U> basic_encoding_conversion(const U & = U{}, enable_not_widenc_t<S, int> =0) const;
+		adv_string<S, U> basic_encoding_conversion(const U & = U{}, enable_not_wide_t<S, int> =0) const;
 
 		template<typename S, typename U = std::allocator<byte>>
 		adv_string<T, U> concatenate(const adv_string_view<S> &, const U & = U{}) const;
@@ -187,10 +187,10 @@ adv_string<S, U> operator+(const adv_string<S, U> &a, const adv_string<T, U> &b)
 	return a.template concatenate<T, U>(b);
 }
 
-using wstr_view = adv_string_view<WIDENC>;
+using wstr_view = adv_string_view<WIDE<unicode>>;
 
 template<typename U = std::allocator<byte>>
-using wstr_d = adv_string<WIDENC, U>;
+using wstr_d = adv_string<WIDE<unicode>, U>;
 
 using wstr = wstr_d<>;
 

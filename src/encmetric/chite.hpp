@@ -65,7 +65,7 @@ class base_tchar_pt{
 		int b_max_bytes() const {return mycast()->max_bytes();}
 		int b_chLen() const {return mycast()->chLen();}
 		bool b_validChar(int &chsiz) const noexcept {return mycast()->validChar(chsiz);}
-		int b_to_unicode(unicode &uni, size_t l) const {return mycast()->to_unicode(uni, l);}
+		int b_decode(typename T::ctype *uni, size_t l) const {return mycast()->decode(uni, l);}
 		bool b_terminate() const{return mycast()->terminate();}
 		/*
 		    Step the pointer by 1 character, returns the number og bytes skipped
@@ -167,7 +167,7 @@ class wbase_tchar_pt : public base_tchar_pt<T, U, byte>{
 	public:
 		explicit constexpr wbase_tchar_pt(byte *b) : base_tchar_pt<T, U, byte>{b} {}
 		
-		int b_from_unicode(unicode uni, size_t l) const {return this->mycast()->from_unicode(uni, l);}
+		int b_encode(const typename T::ctype &uni, size_t l) const {return this->mycast()->encode(uni, l);}
 };
 
 /*
@@ -184,42 +184,42 @@ class const_tchar_pt : public base_tchar_pt<T, const_tchar_pt<T>, byte const>{
 		explicit constexpr const_tchar_pt(const byte *c) : base_tchar_pt<T, const_tchar_pt<T>, byte const>{c} {}
 		explicit constexpr const_tchar_pt(const char *c) : const_tchar_pt{(const byte *)c} {}
 
-		const EncMetric &format() const noexcept {return DynEncoding<T>::instance();}
+		const EncMetric<typename T::ctype> &format() const noexcept {return DynEncoding<T>::instance();}
 		int unity() const noexcept {return T::unity();}
 		int max_bytes() const {return T::max_bytes();}
 		int chLen() const {return T::chLen(this->ptr);}
 		bool validChar(int &chsiz) const noexcept {return T::validChar(this->ptr, chsiz);}
-		int to_unicode(unicode &uni, size_t l) const {return T::to_unicode(uni, this->ptr, l);}
+		int decode(typename static_enc::ctype *uni, size_t l) const {return T::decode(uni, this->ptr, l);}
 		bool terminate() const {return is_all_zero(this->ptr, T::unity());}
 
 		const_tchar_pt new_instance(const byte *c) const{return const_tchar_pt<T>{c};}
 		const_tchar_pt new_instance(const char *c) const{return const_tchar_pt<T>{c};}
 };
 
-template<>
-class const_tchar_pt<WIDENC> : public base_tchar_pt<WIDENC, const_tchar_pt<WIDENC>, byte const>{
+template<typename tt>
+class const_tchar_pt<WIDE<tt>> : public base_tchar_pt<WIDE<tt>, const_tchar_pt<WIDE<tt>>, byte const>{
 	private:
-		const EncMetric *f;
+		const EncMetric<tt> *f;
 	public:
-		using static_enc = WIDENC;
+		using static_enc = WIDE<tt>;
 
-		explicit const_tchar_pt(const EncMetric &rf) : base_tchar_pt<WIDENC, const_tchar_pt<WIDENC>, byte const>{nullptr}, f{&rf} {}
-		explicit const_tchar_pt(const byte *c, const EncMetric &rf) : base_tchar_pt<WIDENC, const_tchar_pt<WIDENC>, byte const>{c}, f{&rf} {}
-		explicit const_tchar_pt(const char *c, const EncMetric &rf) : const_tchar_pt{(const byte *)c, rf} {}
-		explicit const_tchar_pt(const EncMetric &&rf)=delete;
-		explicit const_tchar_pt(const byte *c, const EncMetric &&rf)=delete;
-		explicit const_tchar_pt(const char *c, const EncMetric &&rf)=delete;
+		explicit const_tchar_pt(const EncMetric<tt> &rf) : base_tchar_pt<WIDE<tt>, const_tchar_pt<WIDE<tt>>, byte const>{nullptr}, f{&rf} {}
+		explicit const_tchar_pt(const byte *c, const EncMetric<tt> &rf) : base_tchar_pt<WIDE<tt>, const_tchar_pt<WIDE<tt>>, byte const>{c}, f{&rf} {}
+		explicit const_tchar_pt(const char *c, const EncMetric<tt> &rf) : const_tchar_pt{(const byte *)c, rf} {}
+		explicit const_tchar_pt(const EncMetric<tt> &&rf)=delete;
+		explicit const_tchar_pt(const byte *c, const EncMetric<tt> &&rf)=delete;
+		explicit const_tchar_pt(const char *c, const EncMetric<tt> &&rf)=delete;
 
-		const EncMetric &format() const noexcept {return *f;}
+		const EncMetric<tt> &format() const noexcept {return *f;}
 		int unity() const noexcept {return f->d_unity();}
 		int max_bytes() const {return f->d_max_bytes();}
 		int chLen() const {return f->d_chLen(this->ptr);}
 		bool validChar(int &chsiz) const noexcept {return f->d_validChar(this->ptr, chsiz);}
-		int to_unicode(unicode &uni, size_t l) const {return f->d_to_unicode(uni, this->ptr, l);}
+		int decode(tt &uni, size_t l) const {return f->d_decode(uni, this->ptr, l);}
 		bool terminate() const {return is_all_zero(this->ptr, f->d_unity());}
 
-		const_tchar_pt<WIDENC> new_instance(const byte *c) const{return const_tchar_pt<WIDENC>{c, *f};}
-		const_tchar_pt<WIDENC> new_instance(const char *c) const{return const_tchar_pt<WIDENC>{c, *f};}
+		const_tchar_pt<WIDE<tt>> new_instance(const byte *c) const{return const_tchar_pt<WIDE<tt>>{c, *f};}
+		const_tchar_pt<WIDE<tt>> new_instance(const char *c) const{return const_tchar_pt<WIDE<tt>>{c, *f};}
 };
 
 //-----------
@@ -235,46 +235,46 @@ class tchar_pt : public wbase_tchar_pt<T, tchar_pt<T>>{
 
 		const_tchar_pt<T> cast() noexcept{ return const_tchar_pt<T>{this->ptr};}
 
-		const EncMetric &format() const noexcept {return DynEncoding<T>::instance();}
+		const EncMetric<typename T::ctype> &format() const noexcept {return DynEncoding<T>::instance();}
 		int unity() const noexcept {return T::unity();}
 		int max_bytes() const {return T::max_bytes();}
 		int chLen() const {return T::chLen(this->ptr);}
 		bool validChar(int &chsiz) const noexcept {return T::validChar(this->ptr, chsiz);}
-		int to_unicode(unicode &uni, size_t l) const {return T::to_unicode(uni, this->ptr, l);}
-		int from_unicode(unicode uni, size_t l) const {return T::from_unicode(uni, this->ptr, l);}
+		int decode(typename T::ctype *uni, size_t l) const {return T::decode(uni, this->ptr, l);}
+		int encode(const typename T::ctype &uni, size_t l) const {return T::encode(uni, this->ptr, l);}
 		bool terminate() const {return is_all_zero(this->ptr, T::unity());}
 
 		tchar_pt new_instance(byte *c) const{return tchar_pt<T>{c};}
 		tchar_pt new_instance(char *c) const{return tchar_pt<T>{c};}
 };
 
-template<>
-class tchar_pt<WIDENC> : public wbase_tchar_pt<WIDENC, tchar_pt<WIDENC>>{
+template<typename tt>
+class tchar_pt<WIDE<tt>> : public wbase_tchar_pt<WIDE<tt>, tchar_pt<WIDE<tt>>>{
 	private:
-		const EncMetric *f;
+		const EncMetric<tt> *f;
 	public:
-		using static_enc = WIDENC;
+		using static_enc = WIDE<tt>;
 
-		explicit tchar_pt(const EncMetric &rf) : wbase_tchar_pt<WIDENC, tchar_pt<WIDENC>>{nullptr}, f{&rf} {}
-		explicit tchar_pt(byte *c, const EncMetric &rf) : wbase_tchar_pt<WIDENC, tchar_pt<WIDENC>>{c}, f{&rf} {}
-		explicit tchar_pt(char *c, const EncMetric &rf) : tchar_pt{(byte *)c, rf} {}
-		explicit tchar_pt(const EncMetric &&rf)=delete;
-		explicit tchar_pt(byte *c, const EncMetric &&rf)=delete;
-		explicit tchar_pt(char *c, const EncMetric &&rf)=delete;
-		const EncMetric &format() const noexcept {return *f;}
+		explicit tchar_pt(const EncMetric<tt> &rf) : wbase_tchar_pt<WIDE<tt>, tchar_pt<WIDE<tt>>>{nullptr}, f{&rf} {}
+		explicit tchar_pt(byte *c, const EncMetric<tt> &rf) : wbase_tchar_pt<WIDE<tt>, tchar_pt<WIDE<tt>>>{c}, f{&rf} {}
+		explicit tchar_pt(char *c, const EncMetric<tt> &rf) : tchar_pt{(byte *)c, rf} {}
+		explicit tchar_pt(const EncMetric<tt> &&rf)=delete;
+		explicit tchar_pt(byte *c, const EncMetric<tt> &&rf)=delete;
+		explicit tchar_pt(char *c, const EncMetric<tt> &&rf)=delete;
+		const EncMetric<tt> &format() const noexcept {return *f;}
 
-		const_tchar_pt<WIDENC> cast() noexcept{ return const_tchar_pt<WIDENC>{this->ptr, *f};}
+		const_tchar_pt<WIDE<tt>> cast() noexcept{ return const_tchar_pt<WIDE<tt>>{this->ptr, *f};}
 
 		int unity() const noexcept {return f->d_unity();}
 		int max_bytes() const {return f->d_max_bytes();}
 		int chLen() const {return f->d_chLen(this->ptr);}
 		bool validChar(int &chsiz) const noexcept {return f->d_validChar(this->ptr, chsiz);}
-		int to_unicode(unicode &uni, size_t l) const {return f->d_to_unicode(uni, this->ptr, l);}
-		int from_unicode(unicode uni, size_t l) const {return f->d_from_unicode(uni, this->ptr, l);}
+		int decode(tt *uni, size_t l) const {return f->d_decode(uni, this->ptr, l);}
+		int encode(const tt &uni, size_t l) const {return f->d_encode(uni, this->ptr, l);}
 		bool terminate() const {return is_all_zero(this->ptr, f->d_unity());}
 
-		tchar_pt<WIDENC> new_instance(byte *c) const{return tchar_pt<WIDENC>{c, *f};}
-		tchar_pt<WIDENC> new_instance(char *c) const{return tchar_pt<WIDENC>{c, *f};}
+		tchar_pt<WIDE<tt>> new_instance(byte *c) const{return tchar_pt<WIDE<tt>>{c, *f};}
+		tchar_pt<WIDE<tt>> new_instance(char *c) const{return tchar_pt<WIDE<tt>>{c, *f};}
 };
 
 //---------------------------------------------
@@ -304,20 +304,22 @@ const_tchar_pt<S> convert(const_tchar_pt<T> p);
 /*
     Assign an encoding to a RAW character pointer
 */
-inline tchar_pt<WIDENC> assign(tchar_pt<RAW> r, const EncMetric &f) noexcept {return tchar_pt<WIDENC>{r.data(), f};}
-inline const_tchar_pt<WIDENC> assign(const_tchar_pt<RAW> r, const EncMetric &f) noexcept {return const_tchar_pt<WIDENC>{r.data(), f};}
+template<typename tt>
+inline tchar_pt<WIDE<tt>> assign(tchar_pt<RAW<tt>> r, const EncMetric<tt> &f) noexcept {return tchar_pt<WIDE<tt>>{r.data(), f};}
+template<typename tt>
+inline const_tchar_pt<WIDE<tt>> assign(const_tchar_pt<RAW<tt>> r, const EncMetric<tt> &f) noexcept {return const_tchar_pt<WIDE<tt>>{r.data(), f};}
 
 /*
     Make an encoding conversion between Unicode-compatible encodings using from_unicode and to_unicode functions.
     Note: convert only the first character
 */
-template<typename S, typename T>
+template<typename S, typename T, enable_same_data_t<S, T, int> =0>
 void basic_encoding_conversion(const_tchar_pt<T> in, int inlen, tchar_pt<S> out, int oulen);
-template<typename S, typename T>
+template<typename S, typename T, enable_same_data_t<S, T, int> =0>
 void basic_encoding_conversion(const_tchar_pt<T> in, int inlen, tchar_pt<S> out, int oulen, int &inread, int &outwrite);
 
-using c_wchar_pt = const_tchar_pt<WIDENC>;
-using wchar_pt = tchar_pt<WIDENC>;
+using c_wchar_pt = const_tchar_pt<WIDE<unicode>>;
+using wchar_pt = tchar_pt<WIDE<unicode>>;
 
 #include <encmetric/chite.tpp>
 }

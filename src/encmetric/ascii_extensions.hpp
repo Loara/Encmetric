@@ -29,26 +29,27 @@ namespace adv{
 template<typename Enc>
 class ASCII_extension{
 	public:
+		using ctype=unicode;
 		static constexpr int unity() noexcept {return 1;}
 		static constexpr bool has_max() noexcept {return true;}
 		static constexpr int max_bytes() noexcept {return 1;}
 		static constexpr int chLen(const byte *) {return 1;}
 		static bool validChar(const byte *, int &chlen) noexcept {chlen=1; return true;}
-		static int to_unicode(unicode &uni, const byte *by, size_t l){
+		static int decode(unicode *uni, const byte *by, size_t l){
 			if(l == 0)
 				return 0;
 			if(bit_zero(*by, 7)){
-				uni = to_integer<unicode>(by[0]);
+				*uni = read_unicode(by[0]);
 				return 1;
 			}
 			else{
 				int idx = to_integer<int>(by[0]);
 				idx -= 0x80;
-				uni = Enc::table[idx];
+				*uni = unicode{Enc::table[idx]};
 				return 1;
 			}
 		}
-		static int from_unicode(unicode uni, byte *by, size_t l){
+		static int encode(const unicode &uni, byte *by, size_t l){
 			if(l <= 0)
 				return 0;
 			if(uni < 0x80){

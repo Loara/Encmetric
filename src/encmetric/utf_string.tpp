@@ -329,7 +329,7 @@ adv_string_view<S> adv_string_view<T>::basic_encoding_conversion(tchar_pt<S> buf
 
 template<typename T>
 template<typename S, typename U>
-adv_string<S, U> adv_string_view<T>::basic_encoding_conversion(const EncMetric &format, const U &alloc, enable_widenc_t<S, int>) const{
+adv_string<S, U> adv_string_view<T>::basic_encoding_conversion(const EncMetric<typename S::ctype> &format, const U &alloc, enable_wide_t<S, int>) const{
 	basic_ptr<byte, U> temp{len, alloc};
 	const_tchar_pt<T> from = ptr;
 	tchar_pt<S> to{temp.memory, format};
@@ -365,7 +365,7 @@ adv_string<S, U> adv_string_view<T>::basic_encoding_conversion(const EncMetric &
 
 template<typename T>
 template<typename S, typename U>
-adv_string<S, U> adv_string_view<T>::basic_encoding_conversion(const U &alloc, enable_not_widenc_t<S, int>) const{
+adv_string<S, U> adv_string_view<T>::basic_encoding_conversion(const U &alloc, enable_not_wide_t<S, int>) const{
 	basic_ptr<byte, U> temp{len, alloc};
 	const_tchar_pt<T> from = ptr;
 	tchar_pt<S> to{temp.memory};

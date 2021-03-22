@@ -21,13 +21,14 @@
 namespace adv{
 class UTF8{
 	public:
+		using ctype=unicode;
 		static constexpr int unity() noexcept {return 1;}
 		static constexpr bool has_max() noexcept {return true;}
 		static constexpr int max_bytes() noexcept {return 4;}
 		static int chLen(const byte *);
 		static bool validChar(const byte *, int &chlen) noexcept;
-		static int to_unicode(unicode &uni, const byte *by, size_t l);
-		static int from_unicode(unicode uni, byte *by, size_t l);
+		static int decode(unicode *uni, const byte *by, size_t l);
+		static int encode(const unicode &uni, byte *by, size_t l);
 };
 
 }
