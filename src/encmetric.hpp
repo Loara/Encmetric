@@ -17,4 +17,5 @@
     along with Encmetric. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <encmetric/enc_strings.hpp>
+#include <encmetric/enc_c.hpp>
+#include <encmetric/enc_io.hpp>

@@ -16,7 +16,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Encmetric. If not, see <http://www.gnu.org/licenses/>.
 */
-#include <encmetric/utf_string.hpp>
+#include <encmetric/enc_string.hpp>
 #include <encmetric/all_enc.hpp>
 #include <encmetric/config.hpp>
 #include <type_traits>
@@ -24,12 +24,10 @@
 
 namespace adv{
 
-//Encoding predefinito del compilatore
+//C compiler default encoding for string literals
 using CENC = UTF8;
 inline constexpr bool bend = is_be();
 
-//encoding per IO del sistema
-using IOenc = std::conditional_t<is_windows(), UTF16<false>, UTF8>;
 
 //explicit declaration of template - for compilation improvment
 #ifndef encmetric_library
@@ -46,13 +44,6 @@ using astr_view = adv_string_view<CENC>;
 template<typename U = std::allocator<byte>>
 using astr_d = adv_string<CENC, U>;
 using astr = astr_d<>;
-
-using iochar_pt = tchar_pt<IOenc>;
-using c_iochar_pt = const_tchar_pt<IOenc>;
-using iostr_view = adv_string_view<IOenc>;
-template<typename U = std::allocator<byte>>
-using iostr_d = adv_string<IOenc, U>;
-using iostr = iostr_d<>;
 
 inline astr_view getstring(const char *c){
 	return astr_view{c_achar_pt{c}};

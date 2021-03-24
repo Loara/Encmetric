@@ -94,5 +94,20 @@ void basic_encoding_conversion(const_tchar_pt<T> in, int inlen, tchar_pt<S> out,
 	outread = out.encode(bias, oulen);
 }
 
+template<typename T>
+int min_size_estimate(const_tchar_pt<T> ptr, int nchr) noexcept{
+	if constexpr(!is_wide_v<T>)
+		return min_length<T>(nchr);
+	else
+		return min_length(nchr, ptr.format());
+}
+template<typename T>
+int max_size_estimate(const_tchar_pt<T> ptr, int nchr){
+	if constexpr(!is_wide_v<T>)
+		return max_length<T>(nchr);
+	else
+		return max_length(nchr, ptr.format());
+}
+
 
 

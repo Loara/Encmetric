@@ -62,6 +62,7 @@ class base_tchar_pt{
 		    Informations about relative EncMetric
 		*/
 		int b_unity() const noexcept {return mycast()->unity();}
+		bool b_has_max() const noexcept {return mycast()->has_max();}
 		int b_max_bytes() const {return mycast()->max_bytes();}
 		int b_chLen() const {return mycast()->chLen();}
 		bool b_validChar(int &chsiz) const noexcept {return mycast()->validChar(chsiz);}
@@ -317,6 +318,14 @@ template<typename S, typename T, enable_same_data_t<S, T, int> =0>
 void basic_encoding_conversion(const_tchar_pt<T> in, int inlen, tchar_pt<S> out, int oulen);
 template<typename S, typename T, enable_same_data_t<S, T, int> =0>
 void basic_encoding_conversion(const_tchar_pt<T> in, int inlen, tchar_pt<S> out, int oulen, int &inread, int &outwrite);
+
+/*
+    Estimate the size of a possible string with n characters
+*/
+template<typename T>
+int min_size_estimate(const_tchar_pt<T>, int) noexcept;
+template<typename T>
+int max_size_estimate(const_tchar_pt<T>, int);
 
 using c_wchar_pt = const_tchar_pt<WIDE<unicode>>;
 using wchar_pt = tchar_pt<WIDE<unicode>>;

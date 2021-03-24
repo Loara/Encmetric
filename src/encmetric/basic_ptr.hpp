@@ -35,16 +35,28 @@ class basic_ptr{
 	public:
 		T *memory;
 		std::size_t dimension;
-		basic_ptr() : alloc{}, memory{nullptr}, dimension{0} {}
+		basic_ptr(const U &all = U{}) : alloc{all}, memory{nullptr}, dimension{0} {}
 		explicit basic_ptr(std::size_t dim, const U &all = U{}) : alloc{all}, memory{nullptr}, dimension{0} {
 			if(dim>0){
 				dimension = dim;
 				memory = std::allocator_traits<U>::allocate(alloc, dim);
 			}
 		}
+		//a can be nullptr: only allocates memory
 		explicit basic_ptr(const T* a, std::size_t dim, const U &all = U{}) : memory{nullptr}, dimension{0}, alloc{all} {
 			if(dim>0){
 				dimension = dim;
+				memory = std::allocator_traits<U>::allocate(alloc, dim);
+				if(a != nullptr){
+					for(std::size_t i=0; i<dim; i++){
+						memory[i] = a[i];
+					}
+				}
+			}
+		}
+		void init_a_copy(const T *a, std::size_t dim){
+			if(memory == nullptr){
+				dimension=dim;
 				memory = std::allocator_traits<U>::allocate(alloc, dim);
 				if(a != nullptr){
 					for(std::size_t i=0; i<dim; i++){

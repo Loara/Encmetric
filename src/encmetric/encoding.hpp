@@ -72,6 +72,7 @@ class EncMetric{
 		using ctype=T;
 		virtual ~EncMetric() {}
 		virtual int d_unity() const noexcept=0;
+		virtual bool d_has_max() const noexcept=0;
 		virtual int d_max_bytes() const=0;
 		virtual int d_chLen(const byte *) const=0;
 		virtual bool d_validChar(const byte *, int &chlen) const noexcept =0;
@@ -153,14 +154,41 @@ template<typename T, typename U, typename... Args>
 using enable_not_wide_t = typename enable_not_wide<T, U, Args...>::type;
 
 template<typename T>
-inline constexpr bool fixed_size = T::has_max() && (T::unity() == T::max_bytes());
+inline constexpr bool safe_hasmax = T::has_max();
+template<typename tt>
+inline constexpr bool safe_hasmax<WIDE<tt>> = false;
+
 template<typename T>
-inline constexpr bool fixed_size<WIDE<T>> = false;
+inline constexpr bool fixed_size = T::has_max() && (T::unity() == T::max_bytes());
+template<typename tt>
+inline constexpr bool fixed_size<WIDE<tt>> = false;
+
+template<typename T>
+constexpr int min_length(int nchr) noexcept{
+	return T::unity() * nchr;
+}
+template<typename tt>
+int min_length(int nchr, const EncMetric<tt> &format) noexcept{
+	return format.d_unity() * nchr;
+}
+
+template<typename T>
+constexpr int max_length(int nchr){
+	static_assert(safe_hasmax<T>, "This encoding has no superior limit");
+	return T::max_bytes() * nchr;
+}
+template<typename tt>
+int max_length(int nchr, const EncMetric<tt> &format){
+	if(format.d_has_max())
+		return format.d_max_bytes() * nchr;
+	else
+		throw encoding_error{"This encoding has no superior limit"};
+}
 
 /*
     index_traits control if encoding class ovverides the index
 */
-template<typename T, enable_not_wide_t<T, int>, typename = void>
+template<typename T, enable_not_wide_t<T, int>, typename>
 struct index_traits_0{
 	static std::type_index index() noexcept {return std::type_index{typeid(T)};}
 };
@@ -171,7 +199,7 @@ struct index_traits_0<T, 0, std::void_t<decltype(T::enc_index)>>{
 };
 
 template<typename T>
-struct index_traits : public index_traits_0<T, 0> {};
+struct index_traits : public index_traits_0<T, 0, void> {};
 
 /*
     Wrapper of an encoding T in order to save it in a class field of WIDENC classes
@@ -186,6 +214,7 @@ class DynEncoding : public EncMetric<typename T::ctype>{
 		~DynEncoding() {}
 
 		int d_unity() const noexcept {return static_enc::unity();}
+		bool d_has_max() const noexcept {return static_enc::has_max();}
 		int d_max_bytes() const {return static_enc::max_bytes();}
 		int d_chLen(const byte *b) const {return static_enc::chLen(b);}
 		bool d_validChar(const byte *b, int &chlen) const noexcept {return static_enc::validChar(b, chlen);}
@@ -205,9 +234,9 @@ class DynEncoding : public EncMetric<typename T::ctype>{
 template<typename T>
 constexpr void assert_raw(){static_assert(!is_raw_v<T>, "Using RAW format");}
 
-template<typename T>
-void assert_raw(const EncMetric<T> &f){
-	if(f.index() == index_traits<RAW<T>>::index())
+template<typename tt>
+void assert_raw(const EncMetric<tt> &f){
+	if(f.index() == index_traits<RAW<tt>>::index())
 		throw encoding_error("Using RAW format");
 }
 

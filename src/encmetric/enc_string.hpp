@@ -1,5 +1,4 @@
-#ifndef ADV_MTYPES_T
-#define	ADV_MTYPES_T
+#pragma once
 
 /*
     This file is part of Encmetric.
@@ -172,7 +171,7 @@ class adv_string : public adv_string_view<T>{
 		adv_string(const_tchar_pt<T>, size_t, size_t, basic_ptr<byte, U>, int ignore);
 	public:
 		adv_string(const adv_string_view<T> &, const U & = U{});
-		adv_string(const adv_string<T> &me) : adv_string{static_cast<const adv_string_view<T> &>(me), me.get_allocator()} {}
+		adv_string(const adv_string<T, U> &me) : adv_string{static_cast<const adv_string_view<T> &>(me), me.get_allocator()} {}
 		adv_string(adv_string &&st) noexcept =default;
 
 		U get_allocator() const noexcept{return bind.get_allocator();}
@@ -195,8 +194,7 @@ using wstr_d = adv_string<WIDE<unicode>, U>;
 using wstr = wstr_d<>;
 
 
-#include <encmetric/utf_string.tpp>
+#include <encmetric/enc_string.tpp>
 }
-#endif
 
 
