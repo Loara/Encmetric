@@ -30,9 +30,10 @@ void deduce_lens(const_tchar_pt<T> ptr, size_t &len, size_t &siz){
 }
 
 template<typename T>
-void deduce_lens(const_tchar_pt<T> ptr, size_t dim, bool issiz, size_t &len, size_t &siz){
+void deduce_lens(const_tchar_pt<T> ptr, size_t dim, meas measure, size_t &len, size_t &siz){
 	len = 0;
 	siz = 0;
+	bool issiz = measure == meas::size;
 	if constexpr(fixed_size<T>){
 		if(issiz){
 			len = dim / T::unity();
@@ -82,7 +83,7 @@ adv_string_view<T>::adv_string_view(const_tchar_pt<T> cu) : ptr{cu}, len{0}, siz
 }
 
 template<typename T>
-adv_string_view<T>::adv_string_view(const_tchar_pt<T> cu, size_t dim, bool isdim) : ptr{cu}, len{0}, siz{0}{
+adv_string_view<T>::adv_string_view(const_tchar_pt<T> cu, size_t dim, meas isdim) : ptr{cu}, len{0}, siz{0}{
 	deduce_lens(cu, dim, isdim, len, siz);
 }
 

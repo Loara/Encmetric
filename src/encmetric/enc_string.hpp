@@ -32,6 +32,8 @@ void deduce_lens(const_tchar_pt<T>, size_t &len, size_t &siz);
 template<typename T>
 void deduce_lens(const_tchar_pt<T>, size_t rsiz, bool zero, size_t &len, size_t &siz);
 
+enum class meas{size, length};
+
 template<typename T, typename U>
 class adv_string; //forward declaration
 
@@ -56,7 +58,7 @@ class adv_string_view{
 		explicit adv_string_view(size_t length, size_t size, const_tchar_pt<T> bin) noexcept : ptr{bin}, len{length}, siz{size} {}
 	public:
 		explicit adv_string_view(const_tchar_pt<T>);
-		explicit adv_string_view(const_tchar_pt<T>, size_t dim, bool dim_is_size);//true=size, false=length
+		explicit adv_string_view(const_tchar_pt<T>, size_t dim, meas measure);
 		/*
 		    read exactly len characters and siz bytes. If these values doesn't match trow error
 		*/
@@ -67,7 +69,7 @@ class adv_string_view{
 		template<typename U, enable_not_wide_t<T, int, U> = 0>
 		explicit adv_string_view(const U *b) : adv_string_view{const_tchar_pt<T>{b}} {}
 		template<typename U, enable_not_wide_t<T, int, U> = 0>
-		explicit adv_string_view(const U *b, size_t dim, bool dim_is_size) : adv_string_view{const_tchar_pt<T>{b}, dim, dim_is_size} {}
+		explicit adv_string_view(const U *b, size_t dim, meas measure) : adv_string_view{const_tchar_pt<T>{b}, dim, measure} {}
 		template<typename U, enable_not_wide_t<T, int, U> = 0>
 		explicit adv_string_view(const U *b, size_t siz, size_t len) : adv_string_view{const_tchar_pt<T>{b}, siz, len} {}
 		/*
@@ -76,7 +78,7 @@ class adv_string_view{
 		template<typename U, enable_wide_t<T, int, U> = 0>
 		explicit adv_string_view(const U *b, const EncMetric<typename T::ctype> &f) : adv_string_view{const_tchar_pt<T>{b, f}} {}
 		template<typename U, enable_wide_t<T, int, U> = 0>
-		explicit adv_string_view(const U *b, size_t dim, bool dim_is_size, const EncMetric<typename T::ctype> &f) : adv_string_view{const_tchar_pt<T>{b, f}, dim, dim_is_size} {}
+		explicit adv_string_view(const U *b, size_t dim, meas measure, const EncMetric<typename T::ctype> &f) : adv_string_view{const_tchar_pt<T>{b, f}, dim, measure} {}
 		template<typename U, enable_wide_t<T, int, U> = 0>
 		explicit adv_string_view(const U *b, size_t siz, size_t len, const EncMetric<typename T::ctype> &f) : adv_string_view{const_tchar_pt<T>{b, f}, siz, len} {}
 

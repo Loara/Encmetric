@@ -20,8 +20,6 @@
 #include <encmetric/all_enc.hpp>
 #include <encmetric/config.hpp>
 #include <type_traits>
-#include <iostream>
-#include <string>
 
 namespace adv{
 
@@ -36,9 +34,14 @@ template<typename U = std::allocator<byte>>
 using iostr_d = adv_string<IOenc, U>;
 using iostr = iostr_d<>;
 
+size_t stdin_getChrs(iochar_pt, size_t);
+size_t stdout_putChrs(c_iochar_pt, size_t);
+size_t stderr_putChrs(c_iochar_pt, size_t);
+
 /*
 	encoding-aware IO stream, BEWARE not fully tested
-*/
+	may be removed
+
 template<typename stream, typename T, enable_not_wide_t<T, int> v>
 class stream_wrapper{
 	private:
@@ -52,7 +55,7 @@ class stream_wrapper{
 			val >> std::forward<U>(vty);
 			return *this;
 		}
-		*/
+		
 		template<typename U>
 		stream_wrapper<stream, T, v> &operator<<(U&& ty){
 			val << std::forward<U>(ty);
@@ -92,11 +95,12 @@ stream_wrapper<stream, T, v> &endl(stream_wrapper<stream, T, v> &str){
 	str.basic_stream() << std::endl;
 	return str;
 }
-*/
+
 
 inline stream_wrapper<std::istream, IOenc, 0> ain{std::cin};
 inline stream_wrapper<std::ostream, IOenc, 0> aout{std::cout};
 inline stream_wrapper<std::ostream, IOenc, 0> aerr{std::cerr};
+*/
 
 }
 

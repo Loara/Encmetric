@@ -116,11 +116,9 @@ class base_tchar_pt{
 			else
 				return p_new_instance(ptr + i);
 		}
-		/*
-		    Steps this by 1 character
-		*/
-		U& operator++(){
-			next();
+		U &operator+=(std::ptrdiff_t i){
+			if(i > 0)
+				ptr += i;
 			return instance();
 		}
 		/*
@@ -290,8 +288,8 @@ bool sameEnc(const T1 &arg1, const T2 &arg2){
 	return sameEnc(const_tchar_pt<typename T1::static_enc>{arg1}, const_tchar_pt<typename T2::static_enc>{arg2});
 }
 template<typename S, typename T, typename... Rarg>
-bool sameEnc(const S &f1, const T &f2, const Rarg &... far){
-	return sameEnc(f2, far...) && sameEnc(f1, f2);
+bool sameEnc(const S &f1, const T &f2, const Rarg&... tre){
+	return sameEnc(f2, tre...) && sameEnc(f1, f2);
 }
 
 /*

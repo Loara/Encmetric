@@ -1,0 +1,76 @@
+extern "C"{
+#include <unistd.h>
+}
+#include <encmetric/enc_io.hpp>
+using namespace adv;
+
+size_t adv::stdin_getChrs(iochar_pt ptr, size_t len){
+	size_t chrRem = len;
+	ssize_t siz = read(STDIN_FILENO, ptr.data(), chrRem);
+	if(siz < 0)
+		throw encoding_error{"IO error"};
+	size_t chrRead=0;
+	while(siz > 0){
+		//number of dword
+		size_t dwsiz = ptr.chLen();
+		if(dwsiz > siz){
+			ptr += siz;
+			//read half-character
+			if(read(STDIN_FILENO, ptr.data(), dwsiz - siz) < 0)
+				throw encoding_error{"IO error"};
+			chrRead++;
+			break;
+		}
+		siz -= dwsiz;
+		ptr.next();
+		chrRead++;	
+	}
+	return chrRead;
+}
+
+size_t adv::stdout_putChrs(c_iochar_pt ptr, size_t len){
+	size_t chrRem = len;
+	ssize_t siz = write(STDOUT_FILENO, ptr.data(), chrRem);
+	if(siz < 0)
+		throw encoding_error{"IO error"};
+	size_t chrRead=0;
+	while(siz > 0){
+		//number of dword
+		size_t dwsiz = ptr.chLen();
+		if(dwsiz > siz){
+			ptr += siz;
+			//read half-character
+			if(write(STDOUT_FILENO, ptr.data(), dwsiz - siz) < 0)
+				throw encoding_error{"IO error"};
+			chrRead++;
+			break;
+		}
+		siz -= dwsiz;
+		ptr.next();
+		chrRead++;	
+	}
+	return chrRead;
+}
+size_t adv::stderr_putChrs(c_iochar_pt ptr, size_t len){
+	size_t chrRem = len;
+	ssize_t siz = write(STDERR_FILENO, ptr.data(), chrRem);
+	if(siz < 0)
+		throw encoding_error{"IO error"};
+	size_t chrRead=0;
+	while(siz > 0){
+		//number of dword
+		size_t dwsiz = ptr.chLen();
+		if(dwsiz > siz){
+			ptr += siz;
+			//read half-character
+			if(write(STDERR_FILENO, ptr.data(), dwsiz - siz) < 0)
+				throw encoding_error{"IO error"};
+			chrRead++;
+			break;
+		}
+		siz -= dwsiz;
+		ptr.next();
+		chrRead++;	
+	}
+	return chrRead;
+}

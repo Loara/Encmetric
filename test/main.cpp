@@ -4,12 +4,18 @@
 using namespace adv;
 
 int main(){
-	UTF16BE rout{};
-	UTF32LE rin{};
-
-	astr_view res{"Ciao ciao   bambino"};
-	aout << res << std::endl;
-	astr input = ain.read_enc_string();
-	aout << input << " " << input.size() << " " << input.length() << std::endl;
+	byte buf[10];
+	astr_view res{"Còao ciao   bambino"};
+	c_achar_pt in = res.begin();
+	iochar_pt day{buf}, dayo{buf};
+	basic_encoding_conversion(in, 5, day, 5);
+	in.next();
+	day.next();
+	basic_encoding_conversion(in, 5, day, 5);
+	in.next();
+	day.next();
+	basic_encoding_conversion(in, 5, day, 5);
+	size_t ch = stdout_putChrs(dayo.cast(), 3);
+	std::cout << ch << std::endl;
 }
 
