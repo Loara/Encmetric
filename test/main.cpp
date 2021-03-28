@@ -4,6 +4,7 @@
 using namespace adv;
 
 int main(){
+	Win_1252 a;
 	byte buf[10];
 	astr_view res{"Còao ciao   bambino"};
 	c_achar_pt in = res.begin();

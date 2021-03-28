@@ -16,19 +16,16 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Encmetric. If not, see <http://www.gnu.org/licenses/>.
 */
-#include <encmetric/encoding.hpp>
+#include <encmetric/byte_tools.hpp>
 
 namespace adv{
-class UTF8{
-	public:
-		using ctype=unicode;
-		static constexpr uint unity() noexcept {return 1;}
-		static constexpr bool has_max() noexcept {return true;}
-		static constexpr uint max_bytes() noexcept {return 4;}
-		static uint chLen(const byte *);
-		static bool validChar(const byte *, uint &chlen) noexcept;
-		static uint decode(unicode *uni, const byte *by, size_t l);
-		static uint encode(const unicode &uni, byte *by, size_t l);
-};
+
+size_t raw_stdin_readbytes(byte *, size_t);
+size_t raw_stdout_writebytes(const byte *, size_t);
+size_t raw_stderr_writebytes(const byte *, size_t);
 
 }
+
+
+
+

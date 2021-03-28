@@ -16,6 +16,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Encmetric. If not, see <http://www.gnu.org/licenses/>.
 */
+#include <encmetric/byte_tools.hpp>
 #include <encmetric/encoding.hpp>
 
 namespace adv{
@@ -30,28 +31,28 @@ template<typename Enc>
 class ASCII_extension{
 	public:
 		using ctype=unicode;
-		static constexpr int unity() noexcept {return 1;}
+		static constexpr uint unity() noexcept {return 1;}
 		static constexpr bool has_max() noexcept {return true;}
-		static constexpr int max_bytes() noexcept {return 1;}
-		static constexpr int chLen(const byte *) {return 1;}
-		static bool validChar(const byte *, int &chlen) noexcept {chlen=1; return true;}
-		static int decode(unicode *uni, const byte *by, size_t l){
+		static constexpr uint max_bytes() noexcept {return 1;}
+		static constexpr uint chLen(const byte *) {return 1;}
+		static bool validChar(const byte *, uint &chlen) noexcept {chlen=1; return true;}
+		static uint decode(unicode *uni, const byte *by, size_t l){
 			if(l == 0)
-				return 0;
+				throw buffer_small{};
 			if(bit_zero(*by, 7)){
 				*uni = read_unicode(by[0]);
 				return 1;
 			}
 			else{
-				int idx = to_integer<int>(by[0]);
+				int idx = std::to_integer<int>(by[0]);
 				idx -= 0x80;
 				*uni = unicode{Enc::table[idx]};
 				return 1;
 			}
 		}
-		static int encode(const unicode &uni, byte *by, size_t l){
-			if(l <= 0)
-				return 0;
+		static uint encode(const unicode &uni, byte *by, size_t l){
+			if(l == 0)
+				throw buffer_small{};
 			if(uni < 0x80){
 				*by = byte{static_cast<uint8_t>(uni)};
 				return 1;

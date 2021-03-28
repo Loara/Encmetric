@@ -114,8 +114,11 @@ template<typename T, typename U = std::allocator<byte>>
 basic_ptr<T, U> reallocate(const basic_ptr<T, U> &ptr, std::size_t newdim){
 	basic_ptr<T, U> newinc{newdim, ptr.get_allocator()};
 	std::size_t min = (newdim >= ptr.dimension) ? ptr.dimension : newdim;
+	/*
 	for(int i=0; i<min; i++)
 		newinc.memory[i] = ptr.memory[i];
+	*/
+	std::memcpy(newinc.memory, ptr.memory, min * sizeof(T));
 	return newinc;
 }
 

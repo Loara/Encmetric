@@ -20,13 +20,13 @@
 
 using namespace adv;
 
-int ASCII::chLen(const byte *data){
+uint ASCII::chLen(const byte *data){
 	//non è necessario fare tutti i controlli, poiché si suppone che la stringa sia corretta
 	//usare validChar per effettuare tutti i controlli
 	return 1;
 }
 
-bool ASCII::validChar(const byte *data, int &add) noexcept{
+bool ASCII::validChar(const byte *data, uint &add) noexcept{
 	byte b = *data;
 	add=1;
 	if(!bit_zero(b, 7))
@@ -34,16 +34,16 @@ bool ASCII::validChar(const byte *data, int &add) noexcept{
 	return true;
 }
 
-int ASCII::decode(unicode *uni, const byte *by, size_t l){
+uint ASCII::decode(unicode *uni, const byte *by, size_t l){
 	if(l == 0)
-		throw encoding_error("Not enough bytes");
+		throw buffer_small{};
 	*uni = read_unicode(by[0]);
 	return 1;
 }
 
-int ASCII::encode(const unicode &uni, byte *by, size_t l){
+uint ASCII::encode(const unicode &uni, byte *by, size_t l){
 	if(l == 0)
-		throw encoding_error("Not enough bytes");
+		throw buffer_small{};
 	if(uni >= 128)
 		throw encoding_error("Cannot convert to an ASCII character");
 	by[0] = byte{static_cast<uint8_t>(uni & 0xff)};
@@ -52,25 +52,25 @@ int ASCII::encode(const unicode &uni, byte *by, size_t l){
 
 //------------------------------
 
-int Latin1::chLen(const byte *){
+uint Latin1::chLen(const byte *){
 	return 1;
 }
 
-bool Latin1::validChar(const byte *, int &add) noexcept{
+bool Latin1::validChar(const byte *, uint &add) noexcept{
 	add = 1;
 	return true;
 }
 
-int Latin1::decode(unicode *uni, const byte *by, size_t l){
+uint Latin1::decode(unicode *uni, const byte *by, size_t l){
 	if(l == 0)
-		return 0;
+		throw buffer_small{};
 	*uni = read_unicode(by[0]);
 	return 1;
 }
 
-int Latin1::encode(const unicode &uni, byte *by, size_t l){
+uint Latin1::encode(const unicode &uni, byte *by, size_t l){
 	if(l == 0)
-		return 0;
+		throw buffer_small{};
 	if(uni >= 256)
 		throw encoding_error("Cannot convert to a Latin1 character");
 	by[0] = byte{static_cast<std::uint8_t>(uni & 0xff)};

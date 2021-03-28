@@ -20,7 +20,7 @@
 
 using namespace adv;
 
-int UTF8::chLen(const byte *data){
+uint UTF8::chLen(const byte *data){
 	//non è necessario fare tutti i controlli, poiché si suppone che la stringa sia corretta
 	//usare validChar per effettuare tutti i controlli
 	byte b = *data;
@@ -39,7 +39,7 @@ int UTF8::chLen(const byte *data){
 	}
 }
 
-bool UTF8::validChar(const byte *data, int &add) noexcept{
+bool UTF8::validChar(const byte *data, uint &add) noexcept{
 	byte b = *data;
 
 	if(bit_zero(b, 7))
@@ -62,7 +62,9 @@ bool UTF8::validChar(const byte *data, int &add) noexcept{
 	return true;
 }
 
-int UTF8::decode(unicode *uni, const byte *by, size_t l){
+uint UTF8::decode(unicode *uni, const byte *by, size_t l){
+	if(l == 0)
+		throw buffer_small{};
 	size_t y_byte = 0;
 	byte b = *by;
 	*uni = unicode{0};
@@ -88,7 +90,7 @@ int UTF8::decode(unicode *uni, const byte *by, size_t l){
 		throw encoding_error("Invalid utf8 character");
 
 	if(l < y_byte )
-		return 0;
+		throw buffer_small{};
 	*uni = read_unicode(b);
 	for(size_t i = 1; i < y_byte; i++){
 		byte temp = by[i];
@@ -98,7 +100,9 @@ int UTF8::decode(unicode *uni, const byte *by, size_t l){
 	return y_byte;
 }
 
-int UTF8::encode(const unicode &unin, byte *by, size_t l){
+uint UTF8::encode(const unicode &unin, byte *by, size_t l){
+	if(l == 0)
+		throw buffer_small{};
 	size_t y_byte;
 	byte set_mask{0};
 	//byte reset_mask{0}; Non è necessario
@@ -121,7 +125,7 @@ int UTF8::encode(const unicode &unin, byte *by, size_t l){
 
 	unicode uni=unin;
 	if(l < y_byte )
-		return 0;
+		throw buffer_small{};
 	for(size_t i = y_byte-1; i>=1; i--){
 		by[i] = byte{static_cast<uint8_t>(uni & 0x3f)};
 		uni=unicode{uni >> 6};

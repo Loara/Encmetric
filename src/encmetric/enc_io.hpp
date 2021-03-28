@@ -19,6 +19,7 @@
 #include <encmetric/enc_string.hpp>
 #include <encmetric/all_enc.hpp>
 #include <encmetric/config.hpp>
+#include <encmetric/enc_io_core.hpp>
 #include <type_traits>
 
 namespace adv{
@@ -37,70 +38,6 @@ using iostr = iostr_d<>;
 size_t stdin_getChrs(iochar_pt, size_t);
 size_t stdout_putChrs(c_iochar_pt, size_t);
 size_t stderr_putChrs(c_iochar_pt, size_t);
-
-/*
-	encoding-aware IO stream, BEWARE not fully tested
-	may be removed
-
-template<typename stream, typename T, enable_not_wide_t<T, int> v>
-class stream_wrapper{
-	private:
-		stream &val;
-	public:
-		stream_wrapper(stream &str) : val{str} {}
-		stream &basic_stream() noexcept{return val;}
-		/*
-		template<typename U>
-		stream_wrapper<stream, T, v> &operator>>(U&& ty){
-			val >> std::forward<U>(vty);
-			return *this;
-		}
-		
-		template<typename U>
-		stream_wrapper<stream, T, v> &operator<<(U&& ty){
-			val << std::forward<U>(ty);
-			return *this;
-		}
-		stream_wrapper<stream, T, v> & operator<<(std::basic_ostream<char, std::char_traits<char>>& (*func)(std::basic_ostream<char, std::char_traits<char>>&) ){
-			val << func;
-			return *this;
-		}
-		stream_wrapper<stream, T, v> &operator<<(iostr_view ty){
-			val.write(ty.raw(), ty.size() * sizeof(byte));
-			return *this;
-		}
-		template<typename U>
-		stream_wrapper<stream, T, v> &operator>>(U&& ty){
-			val >> std::forward<U>(ty);
-			return *this;
-		}
-		stream_wrapper<stream, T, v> & operator>>(std::basic_ostream<char, std::char_traits<char>>& (*func)(std::basic_ostream<char, std::char_traits<char>>&) ){
-			val >> func;
-			return *this;
-		}
-		template<typename U = std::allocator<byte>>
-		iostr_d<U> getline(const U &alloc = U{}){
-			std::string afk{};
-			getline(val, afk);
-			//std::cout << "Ok" << std::endl;
-			const char *data = afk.c_str();
-			size_t size = afk.size();
-			iostr_view view{data, size, true};
-			return iostr_d<U>{view};
-		}
-};
-/*
-template<typename stream, typename T, enable_not_wide_t<T, int> v>
-stream_wrapper<stream, T, v> &endl(stream_wrapper<stream, T, v> &str){
-	str.basic_stream() << std::endl;
-	return str;
-}
-
-
-inline stream_wrapper<std::istream, IOenc, 0> ain{std::cin};
-inline stream_wrapper<std::ostream, IOenc, 0> aout{std::cout};
-inline stream_wrapper<std::ostream, IOenc, 0> aerr{std::cerr};
-*/
 
 }
 

@@ -134,13 +134,20 @@ class adv_string_view{
 		const_tchar_pt<T> begin() const noexcept {return at(0);}
 		const_tchar_pt<T> end() const noexcept {return at(len);}
 
+		/*
+			These functions convert out string to another one with different encoding
+		*/
+		/*
+			This one is unsafe, since blen is only the number of character to write, not the dimension of buffer
+		*/
 		template<typename S>
 		adv_string_view<S> basic_encoding_conversion(tchar_pt<S> buffer, size_t blen) const;
 
+		template<typename U = std::allocator<byte>>
+		adv_string<WIDE<typename T::ctype>, U> basic_encoding_conversion(const EncMetric<typename T::ctype> &, const U & = U{}) const;
+
 		template<typename S, typename U = std::allocator<byte>>
-		adv_string<S, U> basic_encoding_conversion(const EncMetric<typename S::ctype> &, const U & = U{}, enable_wide_t<S, int> =0) const;
-		template<typename S, typename U = std::allocator<byte>>
-		adv_string<S, U> basic_encoding_conversion(const U & = U{}, enable_not_wide_t<S, int> =0) const;
+		adv_string<S, U> basic_encoding_conversion(const U & = U{}) const;
 
 		template<typename S, typename U = std::allocator<byte>>
 		adv_string<T, U> concatenate(const adv_string_view<S> &, const U & = U{}) const;
@@ -170,7 +177,13 @@ class adv_string : public adv_string_view<T>{
 		basic_ptr<byte, U> bind;
 
 		adv_string(const_tchar_pt<T>, size_t, size_t, basic_ptr<byte, U>);
-		adv_string(const_tchar_pt<T>, size_t, size_t, basic_ptr<byte, U>, int ignore);
+
+		/*
+			USE WITH EXTREME CARE
+			init with memory pointed by data and ignore ptr, use it only to detect encoding
+			ignore is ignored
+		*/
+		adv_string(const_tchar_pt<T> ptr, size_t len, size_t siz, basic_ptr<byte, U> data, int ignore);
 	public:
 		adv_string(const adv_string_view<T> &, const U & = U{});
 		adv_string(const adv_string<T, U> &me) : adv_string{static_cast<const adv_string_view<T> &>(me), me.get_allocator()} {}

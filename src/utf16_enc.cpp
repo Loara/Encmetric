@@ -21,7 +21,7 @@
 namespace adv{
 
 template<bool be>
-int UTF16<be>::chLen(const byte *data){
+uint UTF16<be>::chLen(const byte *data){
 	//non è necessario fare tutti i controlli, poiché si suppone che la stringa sia corretta
 	//usare validChar per effettuare tutti i controlli
 	if(utf16_range(data, be))
@@ -31,7 +31,7 @@ int UTF16<be>::chLen(const byte *data){
 }
 
 template<bool be>
-bool UTF16<be>::validChar(const byte *data, int &add) noexcept{
+bool UTF16<be>::validChar(const byte *data, uint &add) noexcept{
 	if(utf16_H_range(data, be)){
 		add = 4;
 		if(!utf16_L_range(data+2, false))
@@ -45,7 +45,9 @@ bool UTF16<be>::validChar(const byte *data, int &add) noexcept{
 }
 
 template<bool be>
-int UTF16<be>::decode(unicode *uni, const byte *by, size_t l){
+uint UTF16<be>::decode(unicode *uni, const byte *by, size_t l){
+	if(l < 2)
+		throw buffer_small{};
 	int y_byte = 0;
 	uni = 0;
 	
@@ -55,7 +57,7 @@ int UTF16<be>::decode(unicode *uni, const byte *by, size_t l){
 		y_byte = 2;
 
 	if(l < y_byte)
-		return 0;
+		throw buffer_small{};
 
 	if(y_byte == 4){
 		byte buf[4];
@@ -77,7 +79,9 @@ int UTF16<be>::decode(unicode *uni, const byte *by, size_t l){
 }
 
 template<bool be>
-int UTF16<be>::encode(const unicode &unin, byte *by, size_t l){
+uint UTF16<be>::encode(const unicode &unin, byte *by, size_t l){
+	if(l < 2)
+		throw buffer_small{};
 	int y_byte;
 	if(unin >= 0 && unin < 0xffff){
 		y_byte = 2;
@@ -88,7 +92,7 @@ int UTF16<be>::encode(const unicode &unin, byte *by, size_t l){
 	else throw encoding_error("Not Unicode character");
 
 	if(l < y_byte)
-		return 0;
+		throw buffer_small{};
 	
 	if(y_byte == 4){
 		unicode uni{unin - 0x10000};
