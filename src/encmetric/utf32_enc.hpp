@@ -24,13 +24,14 @@ namespace adv{
 template<bool be>
 class UTF32{
 	public:
-		static constexpr int unity() noexcept {return 4;}
+		using ctype=unicode;
+		static constexpr uint unity() noexcept {return 4;}
 		static constexpr bool has_max() noexcept {return true;}
-		static constexpr int max_bytes() noexcept {return 4;}
-		static int chLen(const byte *){ return 4;}
-		static bool validChar(const byte *, int &chlen) noexcept;
-		static int to_unicode(unicode &uni, const byte *by, size_t l);
-		static int from_unicode(unicode uni, byte *by, size_t l);
+		static constexpr uint max_bytes() noexcept {return 4;}
+		static uint chLen(const byte *){ return 4;}
+		static bool validChar(const byte *, uint &chlen) noexcept;
+		static uint decode(unicode *uni, const byte *by, size_t l);
+		static uint encode(const unicode &uni, byte *by, size_t l);
 };
 
 using UTF32LE = UTF32<false>;

@@ -20,7 +20,7 @@
 
 using namespace adv;
 
-int UTF8::chLen(const byte *data){
+uint UTF8::chLen(const byte *data){
 	//non è necessario fare tutti i controlli, poiché si suppone che la stringa sia corretta
 	//usare validChar per effettuare tutti i controlli
 	byte b = *data;
@@ -39,7 +39,7 @@ int UTF8::chLen(const byte *data){
 	}
 }
 
-bool UTF8::validChar(const byte *data, int &add) noexcept{
+bool UTF8::validChar(const byte *data, uint &add) noexcept{
 	byte b = *data;
 
 	if(bit_zero(b, 7))
@@ -62,10 +62,12 @@ bool UTF8::validChar(const byte *data, int &add) noexcept{
 	return true;
 }
 
-int UTF8::to_unicode(unicode &uni, const byte *by, size_t l){
+uint UTF8::decode(unicode *uni, const byte *by, size_t l){
+	if(l == 0)
+		throw buffer_small{};
 	size_t y_byte = 0;
 	byte b = *by;
-	uni = 0;
+	*uni = unicode{0};
 	
 	if(bit_zero(b, 7)){
 		y_byte = 1;
@@ -88,42 +90,45 @@ int UTF8::to_unicode(unicode &uni, const byte *by, size_t l){
 		throw encoding_error("Invalid utf8 character");
 
 	if(l < y_byte )
-		return 0;
-	uni = to_integer<unicode>(b);
+		throw buffer_small{};
+	*uni = read_unicode(b);
 	for(size_t i = 1; i < y_byte; i++){
 		byte temp = by[i];
 		reset_bits(temp, 6, 7);
-		uni = (uni << 6) + to_integer<unicode>(temp);
+		*uni = unicode{(*uni << 6) + read_unicode(temp)};
 	}
 	return y_byte;
 }
 
-int UTF8::from_unicode(unicode uni, byte *by, size_t l){
+uint UTF8::encode(const unicode &unin, byte *by, size_t l){
+	if(l == 0)
+		throw buffer_small{};
 	size_t y_byte;
 	byte set_mask{0};
 	//byte reset_mask{0}; Non è necessario
-	if(uni < 0x80){
+	if(unin < 0x80){
 		y_byte = 1;
 	}
-	else if(uni >= 0x80 && uni < 0x800){
+	else if(unin >= 0x80 && unin < 0x800){
 		y_byte = 2;
 		set_mask = compose_bit_mask<byte>(7, 6);
 	}
-	else if(uni >= 0x800 && uni < 0x10000){
+	else if(unin >= 0x800 && unin < 0x10000){
 		y_byte = 3;
 		set_mask = compose_bit_mask<byte>(7, 6, 5);
 	}
-	else if(uni >= 0x10000 && uni < 0x110000){
+	else if(unin >= 0x10000 && unin < 0x110000){
 		y_byte = 4;
 		set_mask = compose_bit_mask<byte>(7, 6, 5, 4);
 	}
 	else throw encoding_error("Not Unicode character");
 
+	unicode uni=unin;
 	if(l < y_byte )
-		return 0;
+		throw buffer_small{};
 	for(size_t i = y_byte-1; i>=1; i--){
 		by[i] = byte{static_cast<uint8_t>(uni & 0x3f)};
-		uni >>= 6;
+		uni=unicode{uni >> 6};
 		set_bits(by[i], 7);
 	}
 	by[0] = byte{static_cast<uint8_t>(uni)};

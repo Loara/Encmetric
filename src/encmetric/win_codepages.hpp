@@ -21,10 +21,10 @@
 namespace adv{
 	class Win_1252 : ASCII_extension<Win_1252>{
 		public:
-			static const unicode table[];
+			static const unsigned int table[];
 	};
 	class Win_1250 : ASCII_extension<Win_1250>{
 		public:
-			static const unicode table[];
+			static const unsigned int table[];
 	};
 }

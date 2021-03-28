@@ -9,8 +9,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 #windows test
 if(CMAKE_SYSTEM_NAME MATCHES Win)
 	set(using_windows ON)
+	configure_file(win_enc_io_core.cpp.in enc_io_core.cpp)
 else()
 	set(using_windows OFF)
+	configure_file(linux_enc_io_core.cpp.in enc_io_core.cpp)
 endif()  
 
 configure_file(encmetric/config.hpp.in encmetric/config.hpp)
@@ -19,7 +21,7 @@ configure_file(encmetric/config.hpp.in encmetric/config.hpp)
 file(GLOB headers LIST_DIRECTORIES false "encmetric/*.hpp")
 file(GLOB t_headers LIST_DIRECTORIES false "encmetric/*.tpp")
 
-add_library(encmetric encoding.cpp utf8_enc.cpp enc_strings.cpp utf32_enc.cpp utf16_enc.cpp iso8859_enc.cpp win_codepages.cpp)
+add_library(encmetric encoding.cpp utf8_enc.cpp enc_c.cpp utf32_enc.cpp utf16_enc.cpp iso8859_enc.cpp win_codepages.cpp enc_io.cpp enc_io_core.cpp)
 
 #headers
 target_include_directories(encmetric PUBLIC "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")

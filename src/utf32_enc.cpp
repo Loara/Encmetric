@@ -20,7 +20,7 @@
 
 namespace adv{
 template<bool be>
-bool UTF32<be>::validChar(const byte *data, int &add) noexcept{
+bool UTF32<be>::validChar(const byte *data, uint &add) noexcept{
 	add = 0;
 	if(access(data, be, 4, 0) != byte{0})
 		return false;
@@ -34,24 +34,25 @@ bool UTF32<be>::validChar(const byte *data, int &add) noexcept{
 }
 
 template<bool be>
-int UTF32<be>::to_unicode(unicode &uni, const byte *by, size_t l){
+uint UTF32<be>::decode(unicode *uni, const byte *by, size_t l){
 	if(l < 4)
-		return 0;
-	uni = 0;
+		throw buffer_small{};
+	*uni = unicode{0};
 	for(int i=0; i<4; i++){
-		uni = (uni << 8) + to_integer<unicode>(access(by, be, 4, i));
+		*uni = unicode{(*uni << 8) + read_unicode(access(by, be, 4, i))};
 	}
 	return 4;
 }
 
 template<bool be>
-int UTF32<be>::from_unicode(unicode uni, byte *by, size_t l){
+uint UTF32<be>::encode(const unicode &unin, byte *by, size_t l){
 	if(l < 4)
-		return 0;
+		throw buffer_small{};
 	byte temp[4];
+	unicode uni=unin;
 	for(int i=0; i<4; i++){
 		temp[3-i] = byte{static_cast<uint8_t>(uni & 0xff)};
-		uni >>= 8;
+		uni=unicode{uni >> 8};
 	}
 	copy_end(temp, 4, be, by, 4);
 	return 4;

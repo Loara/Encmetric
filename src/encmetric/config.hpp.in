@@ -66,4 +66,10 @@ constexpr bool is_be() noexcept{
 	#endif
 }
 
+#ifdef using_windows
+
+#else
+
+#endif
+
 }

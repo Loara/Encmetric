@@ -1,32 +1,22 @@
 #include <encmetric.hpp>
-#include <encmetric/tokens.hpp>
 #include <iostream>
 
 using namespace adv;
 
-using atok = Token<CENC>;
-
 int main(){
-	UTF16BE rout{};
-	UTF32LE rin{};
-
-	astr_view res{"Ciao ciao   bambino"};
-	wstr_view rey{"Hi", DynEncoding<UTF8>::instance()};
-	astr_view del = getstring(" ");
-	astr copy = res;
-	atok t{res};
-	while(!t.eof())
-		std::cout << t.proceed(del) << std::endl;
-	byte b;
-	ISO_8859_2::from_unicode(0x13a, &b, 1);
-	std::cout << std::hex << to_integer<int>(b) << std::endl;
-	ISO_8859_2::from_unicode(0x1a, &b, 1);
-	std::cout << std::hex << to_integer<int>(b) << std::endl;
-	ISO_8859_2::from_unicode(0x163, &b, 1);
-	std::cout << std::hex << to_integer<int>(b) << std::endl;
-	b = byte{0xec};
-	unicode u;
-	ISO_8859_2::to_unicode(u, &b, 1);
-	std::cout << std::hex << u << std::endl;
+	Win_1252 a;
+	byte buf[10];
+	astr_view res{"Còao ciao   bambino"};
+	c_achar_pt in = res.begin();
+	iochar_pt day{buf}, dayo{buf};
+	basic_encoding_conversion(in, 5, day, 5);
+	in.next();
+	day.next();
+	basic_encoding_conversion(in, 5, day, 5);
+	in.next();
+	day.next();
+	basic_encoding_conversion(in, 5, day, 5);
+	size_t ch = stdout_putChrs(dayo.cast(), 3);
+	std::cout << ch << std::endl;
 }
 

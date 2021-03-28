@@ -16,19 +16,31 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Encmetric. If not, see <http://www.gnu.org/licenses/>.
 */
-#include <encmetric/encoding.hpp>
+#include <encmetric/enc_string.hpp>
+#include <encmetric/all_enc.hpp>
+#include <encmetric/config.hpp>
+#include <encmetric/enc_io_core.hpp>
+#include <type_traits>
 
 namespace adv{
-class UTF8{
-	public:
-		using ctype=unicode;
-		static constexpr uint unity() noexcept {return 1;}
-		static constexpr bool has_max() noexcept {return true;}
-		static constexpr uint max_bytes() noexcept {return 4;}
-		static uint chLen(const byte *);
-		static bool validChar(const byte *, uint &chlen) noexcept;
-		static uint decode(unicode *uni, const byte *by, size_t l);
-		static uint encode(const unicode &uni, byte *by, size_t l);
-};
+
+//System encoding for IO operations
+using IOenc = std::conditional_t<is_windows(), UTF16<false>, UTF8>;
+
+//explicit declaration of template - for compilation improvment
+using iochar_pt = tchar_pt<IOenc>;
+using c_iochar_pt = const_tchar_pt<IOenc>;
+using iostr_view = adv_string_view<IOenc>;
+template<typename U = std::allocator<byte>>
+using iostr_d = adv_string<IOenc, U>;
+using iostr = iostr_d<>;
+
+size_t stdin_getChrs(iochar_pt, size_t);
+size_t stdout_putChrs(c_iochar_pt, size_t);
+size_t stderr_putChrs(c_iochar_pt, size_t);
 
 }
+
+
+
+

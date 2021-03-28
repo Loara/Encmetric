@@ -1,5 +1,5 @@
 #define encmetric_library 1
-#include <encmetric/enc_strings.hpp>
+#include <encmetric/enc_c.hpp>
 
 using namespace adv;
 

@@ -1,5 +1,4 @@
-#ifndef ADV_MTYPES_T
-#define	ADV_MTYPES_T
+#pragma once
 
 /*
     This file is part of Encmetric.
@@ -33,6 +32,8 @@ void deduce_lens(const_tchar_pt<T>, size_t &len, size_t &siz);
 template<typename T>
 void deduce_lens(const_tchar_pt<T>, size_t rsiz, bool zero, size_t &len, size_t &siz);
 
+enum class meas{size, length};
+
 template<typename T, typename U>
 class adv_string; //forward declaration
 
@@ -57,7 +58,7 @@ class adv_string_view{
 		explicit adv_string_view(size_t length, size_t size, const_tchar_pt<T> bin) noexcept : ptr{bin}, len{length}, siz{size} {}
 	public:
 		explicit adv_string_view(const_tchar_pt<T>);
-		explicit adv_string_view(const_tchar_pt<T>, size_t dim, bool dim_is_size);//true=size, false=length
+		explicit adv_string_view(const_tchar_pt<T>, size_t dim, meas measure);
 		/*
 		    read exactly len characters and siz bytes. If these values doesn't match trow error
 		*/
@@ -65,21 +66,21 @@ class adv_string_view{
 		/*
 		    not-WIDENC costructors
 		*/
-		template<typename U, enable_not_widenc_t<T, int, U> = 0>
+		template<typename U, enable_not_wide_t<T, int, U> = 0>
 		explicit adv_string_view(const U *b) : adv_string_view{const_tchar_pt<T>{b}} {}
-		template<typename U, enable_not_widenc_t<T, int, U> = 0>
-		explicit adv_string_view(const U *b, size_t dim, bool dim_is_size) : adv_string_view{const_tchar_pt<T>{b}, dim, dim_is_size} {}
-		template<typename U, enable_not_widenc_t<T, int, U> = 0>
+		template<typename U, enable_not_wide_t<T, int, U> = 0>
+		explicit adv_string_view(const U *b, size_t dim, meas measure) : adv_string_view{const_tchar_pt<T>{b}, dim, measure} {}
+		template<typename U, enable_not_wide_t<T, int, U> = 0>
 		explicit adv_string_view(const U *b, size_t siz, size_t len) : adv_string_view{const_tchar_pt<T>{b}, siz, len} {}
 		/*
 		    WIDENC costructors
 		*/
-		template<typename U, enable_widenc_t<T, int, U> = 0>
-		explicit adv_string_view(const U *b, const EncMetric &f) : adv_string_view{const_tchar_pt<T>{b, f}} {}
-		template<typename U, enable_widenc_t<T, int, U> = 0>
-		explicit adv_string_view(const U *b, size_t dim, bool dim_is_size, const EncMetric &f) : adv_string_view{const_tchar_pt<T>{b, f}, dim, dim_is_size} {}
-		template<typename U, enable_widenc_t<T, int, U> = 0>
-		explicit adv_string_view(const U *b, size_t siz, size_t len, const EncMetric &f) : adv_string_view{const_tchar_pt<T>{b, f}, siz, len} {}
+		template<typename U, enable_wide_t<T, int, U> = 0>
+		explicit adv_string_view(const U *b, const EncMetric<typename T::ctype> &f) : adv_string_view{const_tchar_pt<T>{b, f}} {}
+		template<typename U, enable_wide_t<T, int, U> = 0>
+		explicit adv_string_view(const U *b, size_t dim, meas measure, const EncMetric<typename T::ctype> &f) : adv_string_view{const_tchar_pt<T>{b, f}, dim, measure} {}
+		template<typename U, enable_wide_t<T, int, U> = 0>
+		explicit adv_string_view(const U *b, size_t siz, size_t len, const EncMetric<typename T::ctype> &f) : adv_string_view{const_tchar_pt<T>{b, f}, siz, len} {}
 
 		virtual ~adv_string_view() {}
 		/*
@@ -133,13 +134,20 @@ class adv_string_view{
 		const_tchar_pt<T> begin() const noexcept {return at(0);}
 		const_tchar_pt<T> end() const noexcept {return at(len);}
 
+		/*
+			These functions convert out string to another one with different encoding
+		*/
+		/*
+			This one is unsafe, since blen is only the number of character to write, not the dimension of buffer
+		*/
 		template<typename S>
 		adv_string_view<S> basic_encoding_conversion(tchar_pt<S> buffer, size_t blen) const;
 
+		template<typename U = std::allocator<byte>>
+		adv_string<WIDE<typename T::ctype>, U> basic_encoding_conversion(const EncMetric<typename T::ctype> &, const U & = U{}) const;
+
 		template<typename S, typename U = std::allocator<byte>>
-		adv_string<S, U> basic_encoding_conversion(const EncMetric &, const U & = U{}, enable_widenc_t<S, int> =0) const;
-		template<typename S, typename U = std::allocator<byte>>
-		adv_string<S, U> basic_encoding_conversion(const U & = U{}, enable_not_widenc_t<S, int> =0) const;
+		adv_string<S, U> basic_encoding_conversion(const U & = U{}) const;
 
 		template<typename S, typename U = std::allocator<byte>>
 		adv_string<T, U> concatenate(const adv_string_view<S> &, const U & = U{}) const;
@@ -169,10 +177,16 @@ class adv_string : public adv_string_view<T>{
 		basic_ptr<byte, U> bind;
 
 		adv_string(const_tchar_pt<T>, size_t, size_t, basic_ptr<byte, U>);
-		adv_string(const_tchar_pt<T>, size_t, size_t, basic_ptr<byte, U>, int ignore);
+
+		/*
+			USE WITH EXTREME CARE
+			init with memory pointed by data and ignore ptr, use it only to detect encoding
+			ignore is ignored
+		*/
+		adv_string(const_tchar_pt<T> ptr, size_t len, size_t siz, basic_ptr<byte, U> data, int ignore);
 	public:
 		adv_string(const adv_string_view<T> &, const U & = U{});
-		adv_string(const adv_string<T> &me) : adv_string{static_cast<const adv_string_view<T> &>(me), me.get_allocator()} {}
+		adv_string(const adv_string<T, U> &me) : adv_string{static_cast<const adv_string_view<T> &>(me), me.get_allocator()} {}
 		adv_string(adv_string &&st) noexcept =default;
 
 		U get_allocator() const noexcept{return bind.get_allocator();}
@@ -187,16 +201,15 @@ adv_string<S, U> operator+(const adv_string<S, U> &a, const adv_string<T, U> &b)
 	return a.template concatenate<T, U>(b);
 }
 
-using wstr_view = adv_string_view<WIDENC>;
+using wstr_view = adv_string_view<WIDE<unicode>>;
 
 template<typename U = std::allocator<byte>>
-using wstr_d = adv_string<WIDENC, U>;
+using wstr_d = adv_string<WIDE<unicode>, U>;
 
 using wstr = wstr_d<>;
 
 
-#include <encmetric/utf_string.tpp>
+#include <encmetric/enc_string.tpp>
 }
-#endif
 
 

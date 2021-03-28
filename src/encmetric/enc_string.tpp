@@ -30,9 +30,10 @@ void deduce_lens(const_tchar_pt<T> ptr, size_t &len, size_t &siz){
 }
 
 template<typename T>
-void deduce_lens(const_tchar_pt<T> ptr, size_t dim, bool issiz, size_t &len, size_t &siz){
+void deduce_lens(const_tchar_pt<T> ptr, size_t dim, meas measure, size_t &len, size_t &siz){
 	len = 0;
 	siz = 0;
+	bool issiz = measure == meas::size;
 	if constexpr(fixed_size<T>){
 		if(issiz){
 			len = dim / T::unity();
@@ -82,7 +83,7 @@ adv_string_view<T>::adv_string_view(const_tchar_pt<T> cu) : ptr{cu}, len{0}, siz
 }
 
 template<typename T>
-adv_string_view<T>::adv_string_view(const_tchar_pt<T> cu, size_t dim, bool isdim) : ptr{cu}, len{0}, siz{0}{
+adv_string_view<T>::adv_string_view(const_tchar_pt<T> cu, size_t dim, meas isdim) : ptr{cu}, len{0}, siz{0}{
 	deduce_lens(cu, dim, isdim, len, siz);
 }
 
@@ -328,44 +329,67 @@ adv_string_view<S> adv_string_view<T>::basic_encoding_conversion(tchar_pt<S> buf
 }
 
 template<typename T>
-template<typename S, typename U>
-adv_string<S, U> adv_string_view<T>::basic_encoding_conversion(const EncMetric &format, const U &alloc, enable_widenc_t<S, int>) const{
-	basic_ptr<byte, U> temp{len, alloc};
+template<typename U>
+adv_string<WIDE<typename T::ctype>, U> adv_string_view<T>::basic_encoding_conversion(const EncMetric<typename T::ctype> &format, const U &alloc) const{
+	basic_ptr<byte, U> temp{len * format.d_unity(), alloc};
 	const_tchar_pt<T> from = ptr;
-	tchar_pt<S> to{temp.memory, format};
-	const_tchar_pt<S> new_to = to.new_instance(temp.memory).cast();
-	if(len == 0)
-		return adv_string<S, U>{new_to, 0, 0, std::move(temp)};
+	tchar_pt<WIDE<typename T::ctype>> to{temp.memory, format};
+	const_tchar_pt<WIDE<typename T::ctype>> new_to = to.cast();
 	size_t remsiz = temp.dimension;
 	size_t newsiz = 0;
 	size_t input_len = siz;
-	for(size_t i=0; i<len; i++){
-		if(input_len <= 0)
-			throw encoding_error();
-		unicode uni;
-		int read = from.to_unicode(uni, input_len);
-		int write = to.from_unicode(uni, remsiz);
-		while(write == 0){
-			size_t tdim = temp.dimension;
-			byte *old_pr = temp.memory;
-			remsiz += 3*tdim;
-			temp = reallocate(std::move(temp), 4*tdim);
-			new_to = to.new_instance(temp.memory).cast();
-			to = to.transfer_to(old_pr, temp.memory);
-			write = to.from_unicode(uni, remsiz);
-		}	
-		input_len -= read;
-		remsiz -= write;
-		newsiz += write;
-		++from;
-		++to;
+
+	if(len == 0)
+		return adv_string<WIDE<typename T::ctype>, U>{new_to, 0, 0, std::move(temp)};
+	if(format.d_fixed_size()){
+		for(size_t i=0; i<len; i++){
+			typename T::ctype uni;
+			size_t read = from.decode(uni, input_len);
+			size_t write = to.encode(uni, remsiz);
+			if(input_len < read)
+				throw encoding_error();	
+			input_len -= read;
+			if(remsiz < write)
+				throw encoding_error();	
+			remsiz -= write;
+			newsiz += write;
+			from.next();
+			to.next();
+		}
+		return adv_string<WIDE<typename T::ctype>, U>{new_to, len, newsiz, std::move(temp)};
 	}
-	return adv_string<S, U>{new_to, len, newsiz, std::move(temp)};
+	else{
+		for(size_t i=0; i<len; i++){
+			typename T::ctype uni;
+			size_t read = from.decode(uni, input_len);
+			size_t write = to.encode(uni, remsiz);
+			while(write == 0){
+				size_t tdim = temp.dimension;
+				byte *old_pr = temp.memory;
+				remsiz += 3*tdim;
+				temp = reallocate(std::move(temp), 4*tdim);
+				new_to = to.new_instance(temp.memory).cast();
+				to = to.transfer_to(old_pr, temp.memory);
+				write = to.encode(uni, remsiz);
+			}
+			if(input_len < read)
+				throw encoding_error();	
+			input_len -= read;
+			if(remsiz < write)
+				throw encoding_error();	
+			remsiz -= write;
+			newsiz += write;
+			from.next();
+			to.next();
+		}
+		return adv_string<WIDE<typename T::ctype>, U>{new_to, len, newsiz, std::move(temp)};
+	}
 }
 
 template<typename T>
 template<typename S, typename U>
-adv_string<S, U> adv_string_view<T>::basic_encoding_conversion(const U &alloc, enable_not_widenc_t<S, int>) const{
+adv_string<S, U> adv_string_view<T>::basic_encoding_conversion(const U &alloc) const{
+	static_assert(!is_wide_v<S>, "Wide encoding");
 	basic_ptr<byte, U> temp{len, alloc};
 	const_tchar_pt<T> from = ptr;
 	tchar_pt<S> to{temp.memory};
@@ -375,26 +399,46 @@ adv_string<S, U> adv_string_view<T>::basic_encoding_conversion(const U &alloc, e
 	size_t remsiz = temp.dimension;
 	size_t newsiz = 0;
 	size_t input_len = siz;
-	for(size_t i=0; i<len; i++){
-		if(input_len <= 0)
-			throw encoding_error();
-		unicode uni;
-		int read = from.to_unicode(uni, input_len);
-		int write = to.from_unicode(uni, remsiz);
-		while(write == 0){
-			size_t tdim = temp.dimension;
-			byte *old_pr = temp.memory;
-			remsiz += 3*tdim;
-			temp = reallocate(std::move(temp), 4*tdim);
-			new_to = to.new_instance(temp.memory).cast();
-			to = to.transfer_to(old_pr, temp.memory);
-			write = to.from_unicode(uni, remsiz);
-		}	
-		input_len -= read;
-		remsiz -= write;
-		newsiz += write;
-		++from;
-		++to;
+	if constexpr(fixed_size<S>){
+		for(size_t i=0; i<len; i++){
+			typename T::ctype uni;
+			int read = from.decode(uni, input_len);
+			int write = to.encode(uni, remsiz);
+			if(input_len < read)
+				throw encoding_error();	
+			input_len -= read;
+			if(remsiz < write)
+				throw encoding_error();	
+			remsiz -= write;
+			newsiz += write;
+			from.next();
+			to.next();
+		}
+	}
+	else{
+		for(size_t i=0; i<len; i++){
+			typename T::ctype uni;
+			int read = from.decode(uni, input_len);
+			int write = to.encode(uni, remsiz);
+			while(write == 0){
+				size_t tdim = temp.dimension;
+				byte *old_pr = temp.memory;
+				remsiz += 3*tdim;
+				temp = reallocate(std::move(temp), 4*tdim);
+				new_to = to.new_instance(temp.memory).cast();
+				to = to.transfer_to(old_pr, temp.memory);
+				write = to.encode(uni, remsiz);
+			}
+			if(input_len < read)
+				throw encoding_error();	
+			input_len -= read;
+			if(remsiz < write)
+				throw encoding_error();	
+			remsiz -= write;
+			newsiz += write;
+			from.next();
+			to.next();
+		}
 	}
 	return adv_string<S, U>{new_to, len, newsiz, std::move(temp)};
 }
