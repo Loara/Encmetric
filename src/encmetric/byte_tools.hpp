@@ -99,8 +99,33 @@ constexpr void swap_bits(B &mask, T... all){
 	mask ^= compose_bit_mask<B>(all...);
 }
 
+
+template<typename B, typename... T>
+constexpr B set_b(B mask, T... all){
+	return mask | compose_bit_mask<B>(all...);
+}
+
+template<typename B, typename... T>
+constexpr B reset_b(B mask, T... all){
+	return mask & ~compose_bit_mask<B>(all...);
+}
+
+template<typename B, typename... T>
+constexpr B leave_b(B mask, T... all){
+	return mask & compose_bit_mask<B>(all...);
+}
+
+template<typename B, typename... T>
+constexpr B swap_b(B mask, T... all){
+	return mask ^ compose_bit_mask<B>(all...);
+}
+
 /*
     access an endianess-dependend arrays as a big endian array
+
+    bool be = true if big endian
+    dim = dimension of object in byte
+    i = i-th byte you access normally if vour object is stored BE
 */
 
 inline constexpr int acc(bool be, int dim, int i){
@@ -114,7 +139,7 @@ constexpr T& access(T *by, bool be, int dim, int i){ return by[acc(be, dim, i)];
     Copy an array in with length len in array out with length len
     The array in is threaten as if vas composed of (len/dim) items each of dimension dim
     if be=false each item is copied in reverse order.
-*/
+
 inline constexpr void copy_end(const byte *in, int len, bool be, byte *out, int dim){
 	if((len % dim) != 0)
 		return;
@@ -124,6 +149,8 @@ inline constexpr void copy_end(const byte *in, int len, bool be, byte *out, int 
 			out[i*dim + j] = access(in+(i*dim), be, dim, j);
 	}
 }
+
+*/
 
 }
 

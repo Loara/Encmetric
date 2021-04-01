@@ -3,20 +3,25 @@
 
 using namespace adv;
 
+template class const_tchar_pt<UTF8>;
+template class const_tchar_pt<WIDEchr>;
+template class tchar_pt<ISO_8859_1>;
+template class tchar_pt<WIDE<byte>>;
+
 int main(){
-	Win_1252 a;
-	byte buf[10];
-	astr_view res{"Còao ciao   bambino"};
-	c_achar_pt in = res.begin();
-	iochar_pt day{buf}, dayo{buf};
-	basic_encoding_conversion(in, 5, day, 5);
-	in.next();
-	day.next();
-	basic_encoding_conversion(in, 5, day, 5);
-	in.next();
-	day.next();
-	basic_encoding_conversion(in, 5, day, 5);
-	size_t ch = stdout_putChrs(dayo.cast(), 3);
-	std::cout << ch << std::endl;
+	adv_string_view<UTF16LE> ay{u"areèò"};
+	adv_string_buf<UTF8> b{};
+	b.append_string_c(ay);
+	adv_string<UTF8> y = b.allocate<std::allocator<byte>>();
+	const byte *p = y.data();
+	const byte *q = ay.data();
+	for(int i=0; i<10; i++){
+		std::cout << (uint)(q[i]) << " ";
+	}
+	std::cout << std::endl;
+	for(int i=0; i<7; i++){
+		std::cout << (uint)(p[i]) << " ";
+	}
+	std::cout << std::endl;
 }
 

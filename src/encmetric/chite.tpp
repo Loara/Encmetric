@@ -18,13 +18,13 @@
 */
 
 template<typename S, typename T>
-bool sameEnc(const const_tchar_pt<S> &a) noexcept{
-	static_assert(!is_wide_v<T>, "Template parameter cannot be wide");
-	if constexpr(!is_wide_v<S>)
+bool sameEnc(const const_tchar_pt<T> &a) noexcept{
+	static_assert(!is_wide_v<S>, "Template parameter cannot be wide");
+	if constexpr(!is_wide_v<T>)
 		return sameEnc_static<S, T>;
 	else{
-		const EncMetric<typename S::ctype> &f = a.format();
-		return f.index() == index_traits<T>::index();
+		const EncMetric<typename T::ctype> &f = a.format();
+		return f.index() == index_traits<S>::index();
 	}
 }
 
@@ -53,42 +53,54 @@ bool sameEnc(const const_tchar_pt<WIDE<tt>> &a, const const_tchar_pt<WIDE<tt>> &
 }
 
 template<typename S, typename T>
-tchar_pt<S> convert(tchar_pt<T> p){
+bool can_reassign(const_tchar_pt<T> ptr) noexcept{
+	if constexpr(is_raw_v<S>)
+		return true;
+	else if constexpr(is_wide_v<S>){
+		if constexpr(is_raw_v<T>)
+			return true;
+		else
+			return std::is_same_v<typename S::ctype, typename T::ctype>;
+	}
+	else
+		return sameEnc<S>(ptr);
+}
+
+template<typename S, typename T>
+tchar_pt<S> reassign(tchar_pt<T> p){
 	if constexpr( std::is_same_v<S, T> ){
 		return p;
 	}
-	else if constexpr( is_wide_v<S> ){
-		return tchar_pt<S>{p.data(), T::instance()};
+	else if constexpr(is_raw_v<S>){
+		return tchar_pt<S>{p.data()};
 	}
-	else if constexpr( is_wide_v<T> ){
-		if(index_traits<S>::index() != p.format().index())
-			throw encoding_error("Impossible to convert these strings");
-		return tchar_pt<S>(p.data());
+	else if constexpr( is_wide_v<S> ){
+		static_assert(is_raw_v<T> || std::is_same_v<typename S::ctype, typename T::ctype>, "Impossible to convert these strings");
+		return tchar_pt<S>{p.data(), DynEncoding<T>::instance()};
 	}
 	else{
-		if(index_traits<S>::index() == index_traits<T>::index())
-			return tchar_pt<S>{p.data()};
-		throw encoding_error("Impossible to convert these strings");
+		if(!sameEnc<S>(p.cast()))
+			throw encoding_error("Impossible to convert these strings");
+		return tchar_pt<S>(p.data());
 	}
 }
 
 template<typename S, typename T>
-const_tchar_pt<S> convert(const_tchar_pt<T> p){
+const_tchar_pt<S> reassign(const_tchar_pt<T> p){
 	if constexpr( std::is_same_v<S, T> ){
 		return p;
 	}
-	else if constexpr( is_wide_v<S> ){
-		return const_tchar_pt<S>{p.data(), T::instance()};
+	else if constexpr(is_raw_v<S>){
+		return const_tchar_pt<S>{p.data()};
 	}
-	else if constexpr( is_wide_v<T> ){
-		if(index_traits<S>::index() != p.format().index())
-			throw encoding_error("Impossible to convert these strings");
-		return const_tchar_pt<S>(p.data());
+	else if constexpr( is_wide_v<S> ){
+		static_assert(is_raw_v<T> || std::is_same_v<typename S::ctype, typename T::ctype>, "Impossible to convert these strings");
+		return const_tchar_pt<S>{p.data(), DynEncoding<T>::instance()};
 	}
 	else{
-		if(index_traits<S>::index() == index_traits<T>::index())
-			return const_tchar_pt<S>{p.data()};
-		throw encoding_error("Impossible to convert these strings");
+		if(!sameEnc<S>(p))
+			throw encoding_error("Impossible to convert these strings");
+		return const_tchar_pt<S>(p.data());
 	}
 }
 

@@ -42,6 +42,7 @@
 #include <typeindex>
 #include <type_traits>
 #include <cstring>
+#include <iostream>
 
 namespace adv{
 
@@ -64,9 +65,18 @@ class encoding_error : public std::exception{
 		const char *what() const noexcept override {return c;}
 };
 class buffer_small : public encoding_error{
+	private:
+		/*
+			Minimum size required, 0 if not determined
+		*/
+		uint mins;
 	public:
-		buffer_small(const char *ms) : encoding_error{ms} {}
-		buffer_small() : encoding_error{"Buffer is too small"} {}
+		buffer_small(const char *ms) : encoding_error{ms}, mins{0} {}
+		buffer_small() : encoding_error{"Buffer is too small"}, mins{0} {}
+		buffer_small(uint ms) : encoding_error{"Buffer is too small"}, mins{ms} {}
+		uint get_required_size() const noexcept{
+			return mins;
+		}
 };
 
 
@@ -95,7 +105,7 @@ class WIDE{
 		using ctype=T;
 };
 
-//using WIDENC=WIDE<unicode>;
+using WIDEchr=WIDE<unicode>;
 
 /*
     No encoding provided
@@ -107,13 +117,14 @@ class RAW{
 		static constexpr int unity() noexcept {return 1;}
 		static constexpr bool has_max() noexcept {return true;}
 		static constexpr int max_bytes() {return 1;}
+		using equivalent_enc=RAW<byte>;
 		static uint chLen(const byte *) {return 1;}
 		static bool validChar(const byte *, uint &i) noexcept{
 			i=1;
 			return true;
 		}
-		static uint decode(T *, const byte *, size_t) {throw encoding_error{"RAW encoding can't be converted to Unicode"};}
-		static uint encode(const T &, byte *, size_t) {throw encoding_error{"RAW encoding can't be converted to Unicode"};}
+		static uint decode(T *, const byte *, size_t) {throw encoding_error{"RAW encoding can't be converted"};}
+		static uint encode(const T &, byte *, size_t) {throw encoding_error{"RAW encoding can't be converted"};}
 };
 
 using RAWchr=RAW<unicode>;
@@ -195,16 +206,27 @@ int max_length(int nchr, const EncMetric<tt> &format){
 */
 template<typename T, enable_not_wide_t<T, int>, typename>
 struct index_traits_0{
-	static std::type_index index() noexcept {return std::type_index{typeid(T)};}
+	using type_enc=T;
 };
 
 template<typename T>
-struct index_traits_0<T, 0, std::void_t<decltype(T::enc_index)>>{
-	static std::type_index index() noexcept {return T::enc_index();}
+struct index_traits_0<T, 0, std::void_t<typename T::equivalent_enc>>{
+	using type_enc=typename T::equivalent_enc;
 };
 
 template<typename T>
-struct index_traits : public index_traits_0<T, 0, void> {};
+struct index_traits : public index_traits_0<T, 0, void> {
+	static std::type_index index() noexcept {return std::type_index{typeid(typename index_traits_0<T, 0, void>::type_enc)};}
+};
+
+template<typename T>
+constexpr void assert_raw(){static_assert(!is_raw_v<T>, "Using RAW format");}
+
+template<typename tt>
+void assert_raw(const EncMetric<tt> &f){
+	if(f.index() == index_traits<RAW<tt>>::index())
+		throw encoding_error("Using RAW format");
+}
 
 /*
     Wrapper of an encoding T in order to save it in a class field of WIDENC classes
@@ -236,14 +258,46 @@ class DynEncoding : public EncMetric<typename T::ctype>{
 		}
 };
 
+/*
+    Store information about used encoding
+*/
 template<typename T>
-constexpr void assert_raw(){static_assert(!is_raw_v<T>, "Using RAW format");}
+class EncMetric_info{
+	public:
+		using ctype=typename T::ctype;
+
+		constexpr uint unity() const noexcept {return T::unity();}
+		constexpr bool has_max() const noexcept {return T::has_max();}
+		constexpr uint max_bytes() const noexcept {return T::max_bytes();}
+		constexpr bool is_fixed() const noexcept {return fixed_size<T>;}
+		uint chLen(const byte *b) const {return T::chLen(b);}
+		uint encLen(const ctype &b) const {return T::encLen(b);}
+		bool validChar(const byte *b, uint &l) const noexcept {return T::validChar(b, l);}
+		uint decode(ctype *uni, const byte *by, size_t l) const {return T::decode(uni, by, l);}
+		uint encode(const ctype &uni, byte *by, size_t l) const {return T::encode(uni, by, l);}
+		std::type_index index() const noexcept {return index_traits<T>::index();}
+};
 
 template<typename tt>
-void assert_raw(const EncMetric<tt> &f){
-	if(f.index() == index_traits<RAW<tt>>::index())
-		throw encoding_error("Using RAW format");
-}
+class EncMetric_info<WIDE<tt>>{
+	private:
+		const EncMetric<tt> *f;
+	public:
+		using ctype=tt;
+		EncMetric_info(const EncMetric<tt> &format) : f{&format} {}
+
+		const EncMetric<tt> &format() const noexcept {return *f;}
+		uint unity() const noexcept {return f->d_unity();}
+		bool has_max() const noexcept {return f->d_has_max();}
+		uint max_bytes() const noexcept {return f->d_max_bytes();}
+		bool is_fixed() const noexcept {return f->d_fixed_size();}
+		uint chLen(const byte *b) const {return f->d_chLen(b);}
+		uint encLen(const ctype &b) const {return f->d_encLen(b);}
+		bool validChar(const byte *b, uint &l) const noexcept {return f->d_validChar(b, l);}
+		uint decode(ctype *uni, const byte *by, size_t l) const {return f->d_decode(uni, by, l);}
+		uint encode(const ctype &uni, byte *by, size_t l) const {return f->d_encode(uni, by, l);}
+		std::type_index index() const noexcept {return f->index();}
+};
 
 /*
     Some basic encodings

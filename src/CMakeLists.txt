@@ -21,7 +21,7 @@ configure_file(encmetric/config.hpp.in encmetric/config.hpp)
 file(GLOB headers LIST_DIRECTORIES false "encmetric/*.hpp")
 file(GLOB t_headers LIST_DIRECTORIES false "encmetric/*.tpp")
 
-add_library(encmetric encoding.cpp utf8_enc.cpp enc_c.cpp utf32_enc.cpp utf16_enc.cpp iso8859_enc.cpp win_codepages.cpp enc_io.cpp enc_io_core.cpp)
+add_library(encmetric encoding.cpp utf8_enc.cpp enc_c.cpp utf32_enc.cpp utf16_enc.cpp iso8859_enc.cpp win_codepages.cpp enc_io.cpp enc_io_core.cpp base64.cpp)
 
 #headers
 target_include_directories(encmetric PUBLIC "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")
