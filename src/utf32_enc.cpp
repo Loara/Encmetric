@@ -36,7 +36,7 @@ bool UTF32<be>::validChar(const byte *data, uint &add) noexcept{
 template<bool be>
 uint UTF32<be>::decode(unicode *uni, const byte *by, size_t l){
 	if(l < 4)
-		throw buffer_small{};
+		throw buffer_small{4};
 	*uni = unicode{0};
 	for(int i=0; i<4; i++){
 		*uni = unicode{(*uni << 8) + read_unicode(access(by, be, 4, i))};
@@ -47,14 +47,13 @@ uint UTF32<be>::decode(unicode *uni, const byte *by, size_t l){
 template<bool be>
 uint UTF32<be>::encode(const unicode &unin, byte *by, size_t l){
 	if(l < 4)
-		throw buffer_small{};
+		throw buffer_small{4};
 	byte temp[4];
 	unicode uni=unin;
 	for(int i=0; i<4; i++){
-		temp[3-i] = byte{static_cast<uint8_t>(uni & 0xff)};
+		access(temp, be, 4, 3-i) = byte{static_cast<uint8_t>(uni & 0xff)};
 		uni=unicode{uni >> 8};
 	}
-	copy_end(temp, 4, be, by, 4);
 	return 4;
 }
 

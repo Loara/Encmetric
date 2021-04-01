@@ -17,7 +17,6 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Encmetric. If not, see <http://www.gnu.org/licenses/>.
 */
-#include <iostream>
 #include <vector>
 #include <memory>
 #include <stdexcept>
@@ -36,6 +35,8 @@ enum class meas{size, length};
 
 template<typename T, typename U>
 class adv_string; //forward declaration
+template<typename T, typename V, typename U>
+class adv_string_buf_0;
 
 /*
     Select only the second template parameter.
@@ -153,7 +154,9 @@ class adv_string_view{
 		adv_string<T, U> concatenate(const adv_string_view<S> &, const U & = U{}) const;
 
 	template<typename W, typename S>
-	friend adv_string_view<W> convert(const adv_string_view<S> &);
+	friend adv_string_view<W> reassign(const adv_string_view<S> &);
+	template<typename S, typename V, typename R>
+	friend class adv_string_buf_0;
 };
 
 template<typename T, typename S>
@@ -162,14 +165,84 @@ bool sameEnc(const adv_string_view<T> &a, const adv_string_view<S> &b) noexcept{
 }
 
 template<typename S, typename T>
-adv_string_view<S> convert(const adv_string_view<T> &ret){
-	return adv_string_view<S>{convert<S, T>(ret.begin()), ret.length(), ret.size()};
+adv_string_view<S> reassign(const adv_string_view<T> &ret){
+	if constexpr(is_raw_v<S>)
+		return adv_string_view<S>{reassign<S, T>(ret.begin()), ret.size(), ret.size()};
+	else
+		return adv_string_view<S>{reassign<S, T>(ret.begin()), ret.length(), ret.size()};
 }
 
-template<typename T>
-std::ostream &operator<<(std::ostream &stream, const adv_string_view<T> &string){
-	return stream.write((const char *)(string.data()), string.size());
-}
+template<typename T, typename V, typename U = std::allocator<byte>>
+class adv_string_buf_0{
+	private:
+		basic_ptr<byte, U> buffer;
+		EncMetric_info<T> ei;
+		size_t siz, len;
+
+		V *mycast() noexcept { return static_cast<V*>(this);}
+		V &instance() noexcept { return *(mycast());}
+		const V *mycast() const noexcept { return static_cast<V const*>(this);}
+		const V &instance() const noexcept { return *(mycast());}
+	protected:
+		adv_string_buf_0(EncMetric_info<T> f, const U &alloc=U{}) : buffer{alloc}, ei{f}, siz{0}, len{0} {}
+	public:
+		size_t size() const noexcept { return siz;}
+		size_t length() const noexcept {return len;}
+		const byte *raw() {return buffer.memory;}
+
+		uint append_chr(const_tchar_pt<T>);
+		size_t append_chrs(const_tchar_pt<T>, size_t);
+		size_t append_string(adv_string_view<T>);
+		V &operator<<(const_tchar_pt<T> p){
+			append_chr(p);
+			return instance();
+		}
+		V &operator<<(adv_string_view<T> p){
+			append_string(p);
+			return instance();
+		}
+
+		/*
+		    Validate the character(s) before adding to buffer
+		*/
+		bool append_chr_v(const_tchar_pt<T>, size_t siz);
+		bool append_chrs_v(const_tchar_pt<T>, size_t siz, size_t nchr);
+
+		/*
+		    Convert the string before adding it
+		*/
+		template<typename S>
+		size_t append_string_c(adv_string_view<S>);
+
+		void clear() noexcept;
+		adv_string_view<T> view() const noexcept;
+		adv_string<T, U> move();
+		template<typename Alloc>
+		adv_string<T, Alloc> allocate(const Alloc & = Alloc{}) const;
+};
+
+template<typename T, typename U = std::allocator<byte>>
+class adv_string_buf : public adv_string_buf_0<T, adv_string_buf<T, U>, U>{
+	public:
+		adv_string_buf(EncMetric_info<T> f, const U & alloc = U{}) : adv_string_buf_0<T, adv_string_buf<T, U>, U>{f, alloc} {}
+		adv_string_buf(const U &alloc = U{}) : adv_string_buf{EncMetric_info<T>{}, alloc} {}
+};
+
+template<typename tt, typename U>
+class adv_string_buf<WIDE<tt>, U> : public adv_string_buf_0<WIDE<tt>, adv_string_buf<WIDE<tt>, U>, U>{
+	public:
+		adv_string_buf(EncMetric_info<WIDE<tt>> f, const U & alloc = U{}) : adv_string_buf_0<WIDE<tt>, adv_string_buf<WIDE<tt>, U>, U>{f, alloc} {}
+
+		adv_string_buf(const EncMetric<tt> &format, const U &alloc = U{}) : adv_string_buf{EncMetric_info<WIDE<tt>>{format}, alloc} {}
+};
+
+template<typename tt>
+class adv_string_buf<WIDE<tt>, std::allocator<byte>> : public adv_string_buf_0<WIDE<tt>, adv_string_buf<WIDE<tt>, std::allocator<byte>>, std::allocator<byte>>{
+	public:
+		adv_string_buf(EncMetric_info<WIDE<tt>> f, const std::allocator<byte> & alloc = std::allocator<byte>{}) : adv_string_buf_0<WIDE<tt>, adv_string_buf<WIDE<tt>, std::allocator<byte>>, std::allocator<byte>>{f, alloc} {}
+
+		adv_string_buf(const EncMetric<tt> &format, const std::allocator<byte> &alloc = std::allocator<byte>{}) : adv_string_buf{EncMetric_info<WIDE<tt>>{format}, alloc} {}
+};
 
 template<typename T, typename U = std::allocator<byte>>
 class adv_string : public adv_string_view<T>{
@@ -194,6 +267,8 @@ class adv_string : public adv_string_view<T>{
 		static adv_string<T, U> newinstance(const_tchar_pt<T>, const U & = U{});
 	template<typename S>
 	friend class adv_string_view;
+	template<typename S, typename V, typename R>
+	friend class adv_string_buf_0;
 };
 
 template<typename S, typename T, typename U = std::allocator<byte>>

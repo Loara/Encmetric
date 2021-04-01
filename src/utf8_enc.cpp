@@ -64,7 +64,7 @@ bool UTF8::validChar(const byte *data, uint &add) noexcept{
 
 uint UTF8::decode(unicode *uni, const byte *by, size_t l){
 	if(l == 0)
-		throw buffer_small{};
+		throw buffer_small{1};
 	size_t y_byte = 0;
 	byte b = *by;
 	*uni = unicode{0};
@@ -90,7 +90,7 @@ uint UTF8::decode(unicode *uni, const byte *by, size_t l){
 		throw encoding_error("Invalid utf8 character");
 
 	if(l < y_byte )
-		throw buffer_small{};
+		throw buffer_small{(uint)y_byte};
 	*uni = read_unicode(b);
 	for(size_t i = 1; i < y_byte; i++){
 		byte temp = by[i];
@@ -102,10 +102,9 @@ uint UTF8::decode(unicode *uni, const byte *by, size_t l){
 
 uint UTF8::encode(const unicode &unin, byte *by, size_t l){
 	if(l == 0)
-		throw buffer_small{};
+		throw buffer_small{1};
 	size_t y_byte;
 	byte set_mask{0};
-	//byte reset_mask{0}; Non è necessario
 	if(unin < 0x80){
 		y_byte = 1;
 	}
@@ -125,7 +124,7 @@ uint UTF8::encode(const unicode &unin, byte *by, size_t l){
 
 	unicode uni=unin;
 	if(l < y_byte )
-		throw buffer_small{};
+		throw buffer_small{(uint)y_byte};
 	for(size_t i = y_byte-1; i>=1; i--){
 		by[i] = byte{static_cast<uint8_t>(uni & 0x3f)};
 		uni=unicode{uni >> 6};
@@ -133,6 +132,7 @@ uint UTF8::encode(const unicode &unin, byte *by, size_t l){
 	}
 	by[0] = byte{static_cast<uint8_t>(uni)};
 	by[0] |= set_mask;
+	std::cout << "D " << (uint)(unin) << std::endl;
 	return y_byte;
 }
 

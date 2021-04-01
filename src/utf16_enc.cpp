@@ -47,9 +47,9 @@ bool UTF16<be>::validChar(const byte *data, uint &add) noexcept{
 template<bool be>
 uint UTF16<be>::decode(unicode *uni, const byte *by, size_t l){
 	if(l < 2)
-		throw buffer_small{};
+		throw buffer_small{2};
 	int y_byte = 0;
-	uni = 0;
+	*uni = unicode{0};
 	
 	if(utf16_range(by, be))
 		y_byte = 4;
@@ -57,23 +57,15 @@ uint UTF16<be>::decode(unicode *uni, const byte *by, size_t l){
 		y_byte = 2;
 
 	if(l < y_byte)
-		throw buffer_small{};
-
-	if(y_byte == 4){
-		byte buf[4];
-		copy_end(by, 4, be, buf, 2);
+		throw buffer_small{(uint)y_byte};
+	if(y_byte == 4){		
 		
-		leave_bits(buf[0], 0, 1);
-		leave_bits(buf[2], 0, 1);
-		
-		unicode p_word{(read_unicode(buf[0]) << 8) + read_unicode(buf[1])};
-		unicode s_word{(read_unicode(buf[2]) << 8) + read_unicode(buf[3])};
+		unicode p_word{(read_unicode( leave_b(access(by, be, 2, 0), 0, 1) ) << 8) + read_unicode(access(by, be, 2, 1))};
+		unicode s_word{(read_unicode( leave_b(access(by+2, be, 2, 0), 0, 1) ) << 8) + read_unicode(access(by+2, be, 2, 1))};
 		*uni = unicode{(p_word << 10) + s_word + 0x10000};
 	}
 	else{
-		byte buf[2];
-		copy_end(by, 2, be, buf, 2);		
-		*uni = unicode{(read_unicode(buf[0]) << 8) + read_unicode(buf[1])};
+		*uni = unicode{(read_unicode(access(by, be, 2, 0)) << 8) + read_unicode(access(by, be, 2, 1))};
 	}
 	return y_byte;
 }
@@ -96,26 +88,22 @@ uint UTF16<be>::encode(const unicode &unin, byte *by, size_t l){
 	
 	if(y_byte == 4){
 		unicode uni{unin - 0x10000};
-		byte temp[4];
-		temp[3] = byte{static_cast<uint8_t>(uni & 0xff)};
+		access(by+2, be, 2, 1) = byte{static_cast<uint8_t>(uni & 0xff)};
 		uni=unicode{uni >> 8};
-		temp[2] = byte{static_cast<uint8_t>(uni & 0x03)};
+		access(by+2, be, 2, 0) = byte{static_cast<uint8_t>(uni & 0x03)};
 		uni=unicode{uni >> 2};
-		temp[1] = byte{static_cast<uint8_t>(uni & 0xff)};
+		access(by, be, 2, 1) = byte{static_cast<uint8_t>(uni & 0xff)};
 		uni=unicode{uni >> 8};
-		temp[0] = byte{static_cast<uint8_t>(uni & 0x03)};
+		access(by, be, 2, 0) = byte{static_cast<uint8_t>(uni & 0x03)};
 
-		set_bits(temp[2], 7, 6, 4, 3, 2);
-		set_bits(temp[0], 7, 6, 4, 3);
-		copy_end(temp, 4, be, by, 2);
+		set_bits(access(by+2, be, 2, 0), 7, 6, 4, 3, 2);
+		set_bits(access(by, be, 2, 0), 7, 6, 4, 3);
 	}
 	else{
 		unicode uni = unin;
-		byte temp[2];
-		temp[1] = byte{static_cast<uint8_t>(uni & 0xff)};
+		access(by, be, 2, 1) = byte{static_cast<uint8_t>(uni & 0xff)};
 		uni=unicode{uni >> 8};
-		temp[0] = byte{static_cast<uint8_t>(uni & 0xff)};
-		copy_end(temp, 2, be, by, 2);
+		access(by, be, 2, 0) = byte{static_cast<uint8_t>(uni & 0xff)};
 	}
 	return y_byte;
 }

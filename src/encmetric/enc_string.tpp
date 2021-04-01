@@ -460,7 +460,143 @@ adv_string<T, U> adv_string_view<T>::concatenate(const adv_string_view<S> &err, 
 		buf[j + siz] = buf2[j];
 	return adv_string<T, U>{std::move(allocater), ptr, len+elen, siz+esiz};
 }
-//------------
+//----------------------------------------------
+template<typename T, typename V, typename U>
+uint adv_string_buf_0<T, V, U>::append_chr(const_tchar_pt<T> ptr){
+	uint chl = ptr.chLen();
+	const byte *dat = ptr.data();
+	append(buffer, siz, dat, chl);
+	siz += chl;
+	len++;
+	return chl;
+}
+
+template<typename T, typename V, typename U>
+size_t adv_string_buf_0<T, V, U>::append_chrs(const_tchar_pt<T> ptr, size_t nchr){
+	size_t part = 0;
+	for(size_t i=0; i<nchr; i++){
+		part += append_chr(ptr);
+		ptr.next();
+	}
+	return part;
+}
+
+template<typename T, typename V, typename U>
+size_t adv_string_buf_0<T, V, U>::append_string(adv_string_view<T> str){
+	size_t ret = str.size();
+	const byte *ptr = str.data();
+	append(buffer, siz, ptr, ret);
+	siz += ret;
+	len += str.length();
+	return ret;
+} 
+
+template<typename T, typename V, typename U>
+bool adv_string_buf_0<T, V, U>::append_chr_v(const_tchar_pt<T> ptr, size_t siz){
+	uint chlen;
+	if(!ptr.validChar(chlen))
+		return false;
+	else if(siz < chlen)
+		return false;
+	const byte *dat = ptr.data();
+	append(buffer, siz, dat, chlen);
+	siz += chlen;
+	len++;
+	return true;
+}
+
+template<typename T, typename V, typename U>
+bool adv_string_buf_0<T, V, U>::append_chrs_v(const_tchar_pt<T> ptr, size_t siz, size_t nchr){
+	uint lbuf;
+	size_t siztotal=0;
+	const_tchar_pt<T> verify = ptr;
+	for(size_t i=0; i<nchr; i++){
+		if(!verify.validChar(lbuf))
+			return false;
+		siztotal += lbuf;
+		if(siztotal > siz)
+			return false;
+		verify.next();
+	}
+	const byte *lay=ptr.data();
+	append(buffer, siz, lay, siztotal);
+	siz += siztotal;
+	len += nchr;
+	return true;
+}
+
+template<typename T, typename V, typename U>
+template<typename S>
+size_t adv_string_buf_0<T, V, U>::append_string_c(adv_string_view<S> str){
+	static_assert(std::is_same_v<typename T::ctype, typename S::ctype>, "Impossible to convert this string");
+	if(str.length() == 0)
+		return 0;
+	const_tchar_pt<S> from = str.begin();
+	size_t from_r = str.size();
+
+	size_t nchr=str.length();
+
+	tchar_pt<T> to{buffer.memory + siz, ei};
+	size_t to_r = buffer.dimension -siz;
+
+	size_t return_r = 0;
+
+	typename T::ctype tempo{};
+
+	for(size_t i=0; i<nchr; i++){
+		from.decode(&tempo, from_r);
+		bool written=false;
+		while(!written){
+			try{
+				to.encode(tempo, to_r);
+				written=true;
+			}
+			catch(const buffer_small &err){
+				size_t tip = err.get_required_size() >0 ? err.get_required_size() : to_r +1;
+				to = tchar_pt<T>{buffer.exp_fit_and_transfer(siz + tip, to.data()), ei};
+				to_r = tip;
+			}
+		}
+		from_r -= from.next();
+		uint wrt = to.next();
+		to_r -= wrt;
+		siz += wrt;
+		return_r += wrt;
+		len ++;
+	}
+	return return_r;
+}
+
+template<typename T, typename V, typename U>
+void adv_string_buf_0<T, V, U>::clear() noexcept{
+	siz=0;
+	len=0;
+}
+
+template<typename T, typename V, typename U>
+adv_string_view<T> adv_string_buf_0<T, V, U>::view() const noexcept{
+	return adv_string_view<T>{len, siz, const_tchar_pt<T>{buffer.memory, ei}};
+}
+
+template<typename T, typename V, typename U>
+adv_string<T, U> adv_string_buf_0<T, V, U>::move(){
+	size_t l=len;
+	size_t s=siz;
+	basic_ptr<byte, U> to = std::move(buffer);
+	buffer.leave();
+	len=0;
+	siz=0;
+	return adv_string<T, U>{const_tchar_pt<T>{nullptr, ei}, l, s, std::move(to), 0};
+}
+
+template<typename T, typename V, typename U>
+template<typename Alloc>
+adv_string<T, Alloc> adv_string_buf_0<T, V, U>::allocate(const Alloc &all) const{
+	adv_string_view<T> rey{len, siz, const_tchar_pt<T>{buffer.memory, ei}};
+	return adv_string<T, Alloc>{rey, all};
+}
+
+//----------------------------------------------
 
 template<typename T, typename U>
 adv_string<T, U>::adv_string(const_tchar_pt<T> ptr, size_t len, size_t siz, basic_ptr<byte, U> by) : adv_string_view<T>{len, siz, ptr}, bind{std::move(by)} {}
@@ -472,7 +608,7 @@ adv_string<T, U>::adv_string(const_tchar_pt<T> ptr, size_t len, size_t siz, basi
 
 template<typename T, typename U>
 adv_string<T, U>::adv_string(const adv_string_view<T> &st, const U &alloc)
-	 : adv_string{st.begin(), st.length(), st.size(), basic_ptr<byte, U>{st.begin().data(), (std::size_t)st.size(), alloc}, 0} {}
+	 : adv_string{st.begin(), st.length(), st.size(), basic_ptr<byte, U>{st.data(), (std::size_t)st.size(), alloc}, 0} {}
 
 template<typename T, typename U>
 adv_string<T, U> adv_string<T, U>::newinstance(const_tchar_pt<T> pt, const U &alloc){
