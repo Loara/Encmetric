@@ -64,24 +64,23 @@ class adv_string_view{
 		    read exactly len characters and siz bytes. If these values doesn't match trow error
 		*/
 		explicit adv_string_view(const_tchar_pt<T>, size_t siz, size_t len);
-		/*
-		    not-WIDENC costructors
-		*/
-		template<typename U, enable_not_wide_t<T, int, U> = 0>
-		explicit adv_string_view(const U *b) : adv_string_view{const_tchar_pt<T>{b}} {}
-		template<typename U, enable_not_wide_t<T, int, U> = 0>
-		explicit adv_string_view(const U *b, size_t dim, meas measure) : adv_string_view{const_tchar_pt<T>{b}, dim, measure} {}
-		template<typename U, enable_not_wide_t<T, int, U> = 0>
-		explicit adv_string_view(const U *b, size_t siz, size_t len) : adv_string_view{const_tchar_pt<T>{b}, siz, len} {}
+		
+		template<typename U, typename... Arg>
+		explicit adv_string_view(const U *b, Arg... args) : adv_string_view{const_tchar_pt<T>{b, args...}} {}
+		template<typename U, typename Integer, typename... Arg>
+		explicit adv_string_view(const U *b, Integer dim, meas measure, Arg... args) : adv_string_view{const_tchar_pt<T>{b, args...}, dim, measure} {}
+		template<typename U, typename Int1, typename Int2, typename... Arg>
+		explicit adv_string_view(const U *b, Int1 siz, Int2 len, Arg... args) : adv_string_view{const_tchar_pt<T>{b, args...}, siz, len} {}
 		/*
 		    WIDENC costructors
-		*/
+		
 		template<typename U, enable_wide_t<T, int, U> = 0>
 		explicit adv_string_view(const U *b, const EncMetric<typename T::ctype> &f) : adv_string_view{const_tchar_pt<T>{b, f}} {}
 		template<typename U, enable_wide_t<T, int, U> = 0>
 		explicit adv_string_view(const U *b, size_t dim, meas measure, const EncMetric<typename T::ctype> &f) : adv_string_view{const_tchar_pt<T>{b, f}, dim, measure} {}
 		template<typename U, enable_wide_t<T, int, U> = 0>
 		explicit adv_string_view(const U *b, size_t siz, size_t len, const EncMetric<typename T::ctype> &f) : adv_string_view{const_tchar_pt<T>{b, f}, siz, len} {}
+		*/
 
 		virtual ~adv_string_view() {}
 		/*
@@ -185,6 +184,7 @@ class adv_string_buf_0{
 		const V &instance() const noexcept { return *(mycast());}
 	protected:
 		adv_string_buf_0(EncMetric_info<T> f, const U &alloc=U{}) : buffer{alloc}, ei{f}, siz{0}, len{0} {}
+		adv_string_buf_0(EncMetric_info<T> f, size_t indim, const U &alloc=U{}) : buffer{indim, alloc}, ei{f}, siz{0}, len{0} {}
 	public:
 		size_t size() const noexcept { return siz;}
 		size_t length() const noexcept {return len;}
@@ -226,6 +226,10 @@ class adv_string_buf : public adv_string_buf_0<T, adv_string_buf<T, U>, U>{
 	public:
 		adv_string_buf(EncMetric_info<T> f, const U & alloc = U{}) : adv_string_buf_0<T, adv_string_buf<T, U>, U>{f, alloc} {}
 		adv_string_buf(const U &alloc = U{}) : adv_string_buf{EncMetric_info<T>{}, alloc} {}
+		adv_string_buf(size_t indim, const U &alloc = U{}) : adv_string_buf{EncMetric_info<T>{}, indim, alloc} {}
+		adv_string_buf(adv_string_view<T> str, const U &alloc= U{}) : adv_string_buf{EncMetric_info<T>{}, alloc} {
+			append_string(str);
+		}
 };
 
 template<typename tt, typename U>
@@ -234,6 +238,10 @@ class adv_string_buf<WIDE<tt>, U> : public adv_string_buf_0<WIDE<tt>, adv_string
 		adv_string_buf(EncMetric_info<WIDE<tt>> f, const U & alloc = U{}) : adv_string_buf_0<WIDE<tt>, adv_string_buf<WIDE<tt>, U>, U>{f, alloc} {}
 
 		adv_string_buf(const EncMetric<tt> &format, const U &alloc = U{}) : adv_string_buf{EncMetric_info<WIDE<tt>>{format}, alloc} {}
+		adv_string_buf(const EncMetric<tt> &format, size_t indim, const U &alloc = U{}) : adv_string_buf{EncMetric_info<WIDE<tt>>{format}, indim, alloc} {}
+		adv_string_buf(adv_string_view<WIDE<tt>> str, const U &alloc= U{}) : adv_string_buf{EncMetric_info<WIDE<tt>>{str.format()}, alloc} {
+			append_string(str);
+		}
 };
 
 template<typename tt>
