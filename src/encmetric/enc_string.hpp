@@ -124,6 +124,12 @@ class adv_string_view{
 		template<typename S>
 		bool containsChar(const_tchar_pt<S>) const;
 
+		template<typename S>
+		bool startsWith(const adv_string_view<S> &) const;
+
+		template<typename S>
+		bool endsWith(const adv_string_view<S> &) const;
+
 		const byte *data() const noexcept {return ptr.data();}
 		const char *raw() const noexcept {return (const char *)(ptr.data());}
 		std::string toString() const noexcept {return std::string{(const char *)(ptr.data()), siz};}

@@ -309,6 +309,37 @@ bool adv_string_view<T>::containsChar(const_tchar_pt<S> cu) const{
 	return false;
 }
 
+template<typename T> template<typename S>
+bool adv_string_view<T>::startsWith(const adv_string_view<S> &sq) const{
+	if(!sameEnc(ptr, sq.begin())){
+		return false;
+	}
+	
+	if(sq.size() == 0){
+		return true;
+	}
+	if(siz < sq.size()){
+		return false;
+	}
+	return compare(ptr.data(), sq.begin().data(), sq.size());
+}
+
+template<typename T> template<typename S>
+bool adv_string_view<T>::endsWith(const adv_string_view<S> &sq) const{
+	if(!sameEnc(ptr, sq.begin())){
+		return false;
+	}
+	
+	if(sq.size() == 0){
+		return true;
+	}
+	if(siz < sq.size()){
+		return false;
+	}
+	const_tchar_pt<T> poi = ptr + siz - sq.size();
+	return compare(poi.data(), sq.begin().data(), sq.size());
+}
+
 template<typename T>
 template<typename S>
 adv_string_view<S> adv_string_view<T>::basic_encoding_conversion(tchar_pt<S> buffer, size_t blen) const{
