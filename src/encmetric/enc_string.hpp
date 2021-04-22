@@ -26,29 +26,53 @@
 #include <encmetric/basic_ptr.hpp>
 
 namespace adv{
+
 template<typename T>
-void deduce_lens(const_tchar_pt<T>, size_t &len, size_t &siz);
+using terminate_func = std::function<bool(const byte *, const EncMetric_info<T> &)>;
+
+template<typename T>
+void deduce_lens(const_tchar_pt<T>, size_t &len, size_t &siz, const terminate_func<T> &);
 template<typename T>
 void deduce_lens(const_tchar_pt<T>, size_t rsiz, bool zero, size_t &len, size_t &siz);
 
 enum class meas{size, length};
+
+/*
+ * Basic terminate function: string is terminated if and only if the encoded character is all 0 bytes
+ */
+template<typename T>
+bool zero_terminating(const byte *data, const EncMetric_info<T> &format){
+    uint size = format.unity();
+	for(uint i=0; i<size; i++){
+		if(data[i] != byte{0})
+			return false;
+	}
+	return true;
+}
+/*
+ * Another terminate function: terminate if and only if the encoded character is equivalent to 0
+ *
+ * WARNING: control up to st characters and may throw if the string is not correctly encoded
+ */
+template<typename T, size_t st = 100>
+bool encoding_terminating(const byte *data, const EncMetric_info<T> &format){
+    using ctype = typename T::ctype;
+    ctype cha;
+    try{
+        format.decode(&cha, data, st);
+    }
+    catch(const buffer_small &){
+        return false;
+    }
+    return cha == ctype{0};
+}
 
 template<typename T, typename U>
 class adv_string; //forward declaration
 template<typename T, typename V, typename U>
 class adv_string_buf_0;
 
-/*
-    Select only the second template parameter.
-    Needed for SFINAE constructors
 
-template<typename A, typename B>
-struct second{
-	using type = B;
-};
-template<typename A, typename B>
-using second_t = typename second<A, B>::type;
-*/
 template<typename T>
 class adv_string_view{
 	private:
@@ -58,7 +82,7 @@ class adv_string_view{
 	protected:
 		explicit adv_string_view(size_t length, size_t size, const_tchar_pt<T> bin) noexcept : ptr{bin}, len{length}, siz{size} {}
 	public:
-		explicit adv_string_view(const_tchar_pt<T>);
+		explicit adv_string_view(const_tchar_pt<T>, const terminate_func<T> & = zero_terminating<T>);
 		explicit adv_string_view(const_tchar_pt<T>, size_t dim, meas measure);
 		/*
 		    read exactly len characters and siz bytes. If these values doesn't match trow error
@@ -278,7 +302,8 @@ class adv_string : public adv_string_view<T>{
 
 		U get_allocator() const noexcept{return bind.get_allocator();}
 		std::size_t capacity() const noexcept{ return bind.dimension;}
-		static adv_string<T, U> newinstance(const_tchar_pt<T>, const U & = U{});
+		static adv_string<T, U> newinstance_ter(const_tchar_pt<T>, const terminate_func<T> &, const U & = U{});
+		static adv_string<T, U> newinstance(const_tchar_pt<T> p, const U &alloc = U{}){return newinstance_ter(p, zero_terminating<T>, alloc);}
 	template<typename S>
 	friend class adv_string_view;
 	template<typename S, typename V, typename R>

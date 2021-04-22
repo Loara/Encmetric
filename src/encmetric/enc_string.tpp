@@ -17,12 +17,12 @@
     along with Encmetric. If not, see <http://www.gnu.org/licenses/>.
 */
 template<typename T>
-void deduce_lens(const_tchar_pt<T> ptr, size_t &len, size_t &siz){
+void deduce_lens(const_tchar_pt<T> ptr, size_t &len, size_t &siz, const terminate_func<T> &terminate){
 	len=0;
 	siz=0;
 	int add;
 
-	while(!ptr.terminate()){
+	while(!terminate(ptr.data(), ptr.raw_format())){
 		add = ptr.next();
 		siz += add;
 		len++;
@@ -78,8 +78,8 @@ void deduce_lens(const_tchar_pt<T> ptr, size_t dim, meas measure, size_t &len, s
 }
 //-----------------------
 template<typename T>
-adv_string_view<T>::adv_string_view(const_tchar_pt<T> cu) : ptr{cu}, len{0}, siz{0}{
-	deduce_lens(cu, len, siz);
+adv_string_view<T>::adv_string_view(const_tchar_pt<T> cu, const terminate_func<T> &terminate) : ptr{cu}, len{0}, siz{0}{
+	deduce_lens(cu, len, siz, terminate);
 }
 
 template<typename T>
@@ -642,9 +642,9 @@ adv_string<T, U>::adv_string(const adv_string_view<T> &st, const U &alloc)
 	 : adv_string{st.begin(), st.length(), st.size(), basic_ptr<byte, U>{st.data(), (std::size_t)st.size(), alloc}, 0} {}
 
 template<typename T, typename U>
-adv_string<T, U> adv_string<T, U>::newinstance(const_tchar_pt<T> pt, const U &alloc){
+adv_string<T, U> adv_string<T, U>::newinstance_ter(const_tchar_pt<T> pt, const terminate_func<T> &terminate, const U &alloc){
 	size_t len=0, siz=0;
-	deduce_lens(pt, len, siz);
+	deduce_lens(pt, len, siz, terminate);
 	return adv_string<T, U>{pt, len, siz, basic_ptr<byte, U>{pt.data(), (std::size_t)siz, alloc}, 0};
 }
 

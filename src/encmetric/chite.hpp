@@ -30,6 +30,7 @@
 #include <type_traits>
 #include <typeindex>
 #include <cstddef>
+#include <functional>
 #include <encmetric/encoding.hpp>
 
 namespace adv{
@@ -180,7 +181,8 @@ class const_tchar_pt : public base_tchar_pt<T, const_tchar_pt<T>, byte const>{
 		template<typename... Args>
 		explicit const_tchar_pt(Args... arg) : const_tchar_pt{static_cast<const byte *>(nullptr), EncMetric_info<T>{arg...}} {}
 
-		bool terminate() const {return is_all_zero(this->ptr, this->ei.unity());}
+		//bool terminate() const {return is_all_zero(this->ptr, this->ei.unity());}
+        //No more required
 
 		const_tchar_pt new_instance(const byte *c) const{return const_tchar_pt<T>{c, this->ei};}
 		const_tchar_pt new_instance(const char *c) const{return const_tchar_pt<T>{c, this->ei};}
@@ -202,7 +204,7 @@ class tchar_pt : public wbase_tchar_pt<T, tchar_pt<T>>{
 		template<typename... Arg>
 		explicit tchar_pt(Arg... arg) : tchar_pt{static_cast<byte *>(nullptr), EncMetric_info<T>{arg...}} {}
 
-		bool terminate() const {return is_all_zero(this->ptr, this->ei.unity());}
+		//bool terminate() const {return is_all_zero(this->ptr, this->ei.unity());}
 		const_tchar_pt<T> cast() const noexcept{ return const_tchar_pt<T>{this->ptr, this->ei};}
 
 		tchar_pt new_instance(byte *c) const{return tchar_pt<T>{c, this->ei};}

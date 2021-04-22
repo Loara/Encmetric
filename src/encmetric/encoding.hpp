@@ -48,14 +48,6 @@ namespace adv{
 
 inline void copyN(const byte *src, byte *des, size_t l) {std::memcpy(des, src, l);}
 
-inline bool is_all_zero(const byte *data, size_t len){
-	for(size_t i=0; i<len; i++){
-		if(data[i] != byte{0})
-			return false;
-	}
-	return true;
-}
-
 class encoding_error : public std::exception{
 	private:
 		const char *c;
