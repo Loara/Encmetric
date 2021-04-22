@@ -27,6 +27,7 @@ to build also the test executable turn on the option ```BUILD_TEST``` in cmake.
 * UTF8
 * UTF16
 * UTF32
+* Base64
 * Windows codepage 1252
 * Windows codepage 1250
 
