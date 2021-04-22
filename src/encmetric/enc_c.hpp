@@ -95,7 +95,7 @@ inline adv_string_view<UTF16<bend>> operator"" _asv(const char16_t *b, std::size
 	return adv_string_view<UTF16<bend>>{(const byte *)b, st * 2, meas::size};
 }
 inline adv_string_view<UTF32<bend>> operator"" _asv(const char32_t *b, std::size_t st){
-	return adv_string_view<UTF32<bend>>{(const byte *)b, st * 4,     meas::size};
+	return adv_string_view<UTF32<bend>>{(const byte *)b, st * 4, meas::size};
 }
 
 }
