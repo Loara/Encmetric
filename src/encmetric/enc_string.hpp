@@ -35,7 +35,7 @@ void deduce_lens(const_tchar_pt<T>, size_t &len, size_t &siz, const terminate_fu
 template<typename T>
 void deduce_lens(const_tchar_pt<T>, size_t rsiz, bool zero, size_t &len, size_t &siz);
 
-enum class meas{size, length};
+enum class meas {size, length};
 
 /*
  * Basic terminate function: string is terminated if and only if the encoded character is all 0 bytes
@@ -92,9 +92,14 @@ class adv_string_view{
 		template<typename U, typename... Arg>
 		explicit adv_string_view(const U *b, Arg... args) : adv_string_view{const_tchar_pt<T>{b, args...}} {}
 		template<typename U, typename Integer, typename... Arg>
-		explicit adv_string_view(const U *b, Integer dim, meas measure, Arg... args) : adv_string_view{const_tchar_pt<T>{b, args...}, dim, measure} {}
+		explicit adv_string_view(const U *b, Integer dim, meas measure, Arg... args) : adv_string_view{const_tchar_pt<T>{b, args...}, dim, measure} {
+            static_assert(std::is_integral_v<Integer> && std::is_unsigned_v<Integer> && !std::is_same_v<Integer, bool>, "Invalid dimension type");
+        }
 		template<typename U, typename Int1, typename Int2, typename... Arg>
-		explicit adv_string_view(const U *b, Int1 siz, Int2 len, Arg... args) : adv_string_view{const_tchar_pt<T>{b, args...}, siz, len} {}
+		explicit adv_string_view(const U *b, Int1 siz, Int2 len, Arg... args) : adv_string_view{const_tchar_pt<T>{b, args...}, siz, len} {
+            static_assert(std::is_integral_v<Int1> && std::is_unsigned_v<Int1> && !std::is_same_v<Int1, bool>, "Invalid dimension type");
+            static_assert(std::is_integral_v<Int2> && std::is_unsigned_v<Int2> && !std::is_same_v<Int2, bool>, "Invalid dimension type");
+        }
 		/*
 		    WIDENC costructors
 		
