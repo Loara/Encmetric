@@ -48,14 +48,6 @@ namespace adv{
 
 inline void copyN(const byte *src, byte *des, size_t l) {std::memcpy(des, src, l);}
 
-inline bool is_all_zero(const byte *data, size_t len){
-	for(size_t i=0; i<len; i++){
-		if(data[i] != byte{0})
-			return false;
-	}
-	return true;
-}
-
 class encoding_error : public std::exception{
 	private:
 		const char *c;
@@ -252,9 +244,9 @@ class DynEncoding : public EncMetric<typename T::ctype>{
 
 		bool d_fixed_size() const noexcept {return fixed_size<T>;}
 
-		static const EncMetric<typename T::ctype> &instance() noexcept{
+		static const EncMetric<typename T::ctype> *instance() noexcept{
 			static DynEncoding<T> t{};
-			return t;
+			return &t;
 		}
 };
 
@@ -264,14 +256,17 @@ class DynEncoding : public EncMetric<typename T::ctype>{
 template<typename T>
 class EncMetric_info{
 	public:
+		EncMetric_info(const EncMetric_info<T> &) noexcept {}
+
+		EncMetric_info() {}
 		using ctype=typename T::ctype;
+		const EncMetric<ctype> &format() const noexcept {return DynEncoding<T>::instance();}
 
 		constexpr uint unity() const noexcept {return T::unity();}
 		constexpr bool has_max() const noexcept {return T::has_max();}
 		constexpr uint max_bytes() const noexcept {return T::max_bytes();}
 		constexpr bool is_fixed() const noexcept {return fixed_size<T>;}
 		uint chLen(const byte *b) const {return T::chLen(b);}
-		uint encLen(const ctype &b) const {return T::encLen(b);}
 		bool validChar(const byte *b, uint &l) const noexcept {return T::validChar(b, l);}
 		uint decode(ctype *uni, const byte *by, size_t l) const {return T::decode(uni, by, l);}
 		uint encode(const ctype &uni, byte *by, size_t l) const {return T::encode(uni, by, l);}
@@ -284,7 +279,8 @@ class EncMetric_info<WIDE<tt>>{
 		const EncMetric<tt> *f;
 	public:
 		using ctype=tt;
-		EncMetric_info(const EncMetric<tt> &format) : f{&format} {}
+		EncMetric_info(const EncMetric<tt> *format) : f{format} {}
+		EncMetric_info(const EncMetric_info &info) : f{info.f} {}
 
 		const EncMetric<tt> &format() const noexcept {return *f;}
 		uint unity() const noexcept {return f->d_unity();}
@@ -292,7 +288,6 @@ class EncMetric_info<WIDE<tt>>{
 		uint max_bytes() const noexcept {return f->d_max_bytes();}
 		bool is_fixed() const noexcept {return f->d_fixed_size();}
 		uint chLen(const byte *b) const {return f->d_chLen(b);}
-		uint encLen(const ctype &b) const {return f->d_encLen(b);}
 		bool validChar(const byte *b, uint &l) const noexcept {return f->d_validChar(b, l);}
 		uint decode(ctype *uni, const byte *by, size_t l) const {return f->d_decode(uni, by, l);}
 		uint encode(const ctype &uni, byte *by, size_t l) const {return f->d_encode(uni, by, l);}

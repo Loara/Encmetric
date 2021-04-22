@@ -26,29 +26,53 @@
 #include <encmetric/basic_ptr.hpp>
 
 namespace adv{
+
 template<typename T>
-void deduce_lens(const_tchar_pt<T>, size_t &len, size_t &siz);
+using terminate_func = std::function<bool(const byte *, const EncMetric_info<T> &)>;
+
+template<typename T>
+void deduce_lens(const_tchar_pt<T>, size_t &len, size_t &siz, const terminate_func<T> &);
 template<typename T>
 void deduce_lens(const_tchar_pt<T>, size_t rsiz, bool zero, size_t &len, size_t &siz);
 
-enum class meas{size, length};
+enum class meas {size, length};
+
+/*
+ * Basic terminate function: string is terminated if and only if the encoded character is all 0 bytes
+ */
+template<typename T>
+bool zero_terminating(const byte *data, const EncMetric_info<T> &format){
+    uint size = format.unity();
+	for(uint i=0; i<size; i++){
+		if(data[i] != byte{0})
+			return false;
+	}
+	return true;
+}
+/*
+ * Another terminate function: terminate if and only if the encoded character is equivalent to 0
+ *
+ * WARNING: control up to st characters and may throw if the string is not correctly encoded
+ */
+template<typename T, size_t st = 100>
+bool encoding_terminating(const byte *data, const EncMetric_info<T> &format){
+    using ctype = typename T::ctype;
+    ctype cha;
+    try{
+        format.decode(&cha, data, st);
+    }
+    catch(const buffer_small &){
+        return false;
+    }
+    return cha == ctype{0};
+}
 
 template<typename T, typename U>
 class adv_string; //forward declaration
 template<typename T, typename V, typename U>
 class adv_string_buf_0;
 
-/*
-    Select only the second template parameter.
-    Needed for SFINAE constructors
 
-template<typename A, typename B>
-struct second{
-	using type = B;
-};
-template<typename A, typename B>
-using second_t = typename second<A, B>::type;
-*/
 template<typename T>
 class adv_string_view{
 	private:
@@ -58,30 +82,34 @@ class adv_string_view{
 	protected:
 		explicit adv_string_view(size_t length, size_t size, const_tchar_pt<T> bin) noexcept : ptr{bin}, len{length}, siz{size} {}
 	public:
-		explicit adv_string_view(const_tchar_pt<T>);
+		explicit adv_string_view(const_tchar_pt<T>, const terminate_func<T> & = zero_terminating<T>);
 		explicit adv_string_view(const_tchar_pt<T>, size_t dim, meas measure);
 		/*
 		    read exactly len characters and siz bytes. If these values doesn't match trow error
 		*/
 		explicit adv_string_view(const_tchar_pt<T>, size_t siz, size_t len);
-		/*
-		    not-WIDENC costructors
-		*/
-		template<typename U, enable_not_wide_t<T, int, U> = 0>
-		explicit adv_string_view(const U *b) : adv_string_view{const_tchar_pt<T>{b}} {}
-		template<typename U, enable_not_wide_t<T, int, U> = 0>
-		explicit adv_string_view(const U *b, size_t dim, meas measure) : adv_string_view{const_tchar_pt<T>{b}, dim, measure} {}
-		template<typename U, enable_not_wide_t<T, int, U> = 0>
-		explicit adv_string_view(const U *b, size_t siz, size_t len) : adv_string_view{const_tchar_pt<T>{b}, siz, len} {}
+		
+		template<typename U, typename... Arg>
+		explicit adv_string_view(const U *b, Arg... args) : adv_string_view{const_tchar_pt<T>{b, args...}} {}
+		template<typename U, typename Integer, typename... Arg>
+		explicit adv_string_view(const U *b, Integer dim, meas measure, Arg... args) : adv_string_view{const_tchar_pt<T>{b, args...}, dim, measure} {
+            static_assert(std::is_integral_v<Integer> && std::is_unsigned_v<Integer> && !std::is_same_v<Integer, bool>, "Invalid dimension type");
+        }
+		template<typename U, typename Int1, typename Int2, typename... Arg>
+		explicit adv_string_view(const U *b, Int1 siz, Int2 len, Arg... args) : adv_string_view{const_tchar_pt<T>{b, args...}, siz, len} {
+            static_assert(std::is_integral_v<Int1> && std::is_unsigned_v<Int1> && !std::is_same_v<Int1, bool>, "Invalid dimension type");
+            static_assert(std::is_integral_v<Int2> && std::is_unsigned_v<Int2> && !std::is_same_v<Int2, bool>, "Invalid dimension type");
+        }
 		/*
 		    WIDENC costructors
-		*/
+		
 		template<typename U, enable_wide_t<T, int, U> = 0>
 		explicit adv_string_view(const U *b, const EncMetric<typename T::ctype> &f) : adv_string_view{const_tchar_pt<T>{b, f}} {}
 		template<typename U, enable_wide_t<T, int, U> = 0>
 		explicit adv_string_view(const U *b, size_t dim, meas measure, const EncMetric<typename T::ctype> &f) : adv_string_view{const_tchar_pt<T>{b, f}, dim, measure} {}
 		template<typename U, enable_wide_t<T, int, U> = 0>
 		explicit adv_string_view(const U *b, size_t siz, size_t len, const EncMetric<typename T::ctype> &f) : adv_string_view{const_tchar_pt<T>{b, f}, siz, len} {}
+		*/
 
 		virtual ~adv_string_view() {}
 		/*
@@ -125,6 +153,12 @@ class adv_string_view{
 		template<typename S>
 		bool containsChar(const_tchar_pt<S>) const;
 
+		template<typename S>
+		bool startsWith(const adv_string_view<S> &) const;
+
+		template<typename S>
+		bool endsWith(const adv_string_view<S> &) const;
+
 		const byte *data() const noexcept {return ptr.data();}
 		const char *raw() const noexcept {return (const char *)(ptr.data());}
 		std::string toString() const noexcept {return std::string{(const char *)(ptr.data()), siz};}
@@ -145,7 +179,7 @@ class adv_string_view{
 		adv_string_view<S> basic_encoding_conversion(tchar_pt<S> buffer, size_t blen) const;
 
 		template<typename U = std::allocator<byte>>
-		adv_string<WIDE<typename T::ctype>, U> basic_encoding_conversion(const EncMetric<typename T::ctype> &, const U & = U{}) const;
+		adv_string<WIDE<typename T::ctype>, U> basic_encoding_conversion(const EncMetric<typename T::ctype> *, const U & = U{}) const;
 
 		template<typename S, typename U = std::allocator<byte>>
 		adv_string<S, U> basic_encoding_conversion(const U & = U{}) const;
@@ -185,6 +219,7 @@ class adv_string_buf_0{
 		const V &instance() const noexcept { return *(mycast());}
 	protected:
 		adv_string_buf_0(EncMetric_info<T> f, const U &alloc=U{}) : buffer{alloc}, ei{f}, siz{0}, len{0} {}
+		adv_string_buf_0(EncMetric_info<T> f, size_t indim, const U &alloc=U{}) : buffer{indim, alloc}, ei{f}, siz{0}, len{0} {}
 	public:
 		size_t size() const noexcept { return siz;}
 		size_t length() const noexcept {return len;}
@@ -226,6 +261,10 @@ class adv_string_buf : public adv_string_buf_0<T, adv_string_buf<T, U>, U>{
 	public:
 		adv_string_buf(EncMetric_info<T> f, const U & alloc = U{}) : adv_string_buf_0<T, adv_string_buf<T, U>, U>{f, alloc} {}
 		adv_string_buf(const U &alloc = U{}) : adv_string_buf{EncMetric_info<T>{}, alloc} {}
+		adv_string_buf(size_t indim, const U &alloc = U{}) : adv_string_buf{EncMetric_info<T>{}, indim, alloc} {}
+		adv_string_buf(adv_string_view<T> str, const U &alloc= U{}) : adv_string_buf{EncMetric_info<T>{}, alloc} {
+			append_string(str);
+		}
 };
 
 template<typename tt, typename U>
@@ -233,7 +272,11 @@ class adv_string_buf<WIDE<tt>, U> : public adv_string_buf_0<WIDE<tt>, adv_string
 	public:
 		adv_string_buf(EncMetric_info<WIDE<tt>> f, const U & alloc = U{}) : adv_string_buf_0<WIDE<tt>, adv_string_buf<WIDE<tt>, U>, U>{f, alloc} {}
 
-		adv_string_buf(const EncMetric<tt> &format, const U &alloc = U{}) : adv_string_buf{EncMetric_info<WIDE<tt>>{format}, alloc} {}
+		adv_string_buf(const EncMetric<tt> *format, const U &alloc = U{}) : adv_string_buf{EncMetric_info<WIDE<tt>>{format}, alloc} {}
+		adv_string_buf(const EncMetric<tt> *format, size_t indim, const U &alloc = U{}) : adv_string_buf{EncMetric_info<WIDE<tt>>{format}, indim, alloc} {}
+		adv_string_buf(adv_string_view<WIDE<tt>> str, const U &alloc= U{}) : adv_string_buf{EncMetric_info<WIDE<tt>>{str.format()}, alloc} {
+			append_string(str);
+		}
 };
 
 template<typename tt>
@@ -241,7 +284,7 @@ class adv_string_buf<WIDE<tt>, std::allocator<byte>> : public adv_string_buf_0<W
 	public:
 		adv_string_buf(EncMetric_info<WIDE<tt>> f, const std::allocator<byte> & alloc = std::allocator<byte>{}) : adv_string_buf_0<WIDE<tt>, adv_string_buf<WIDE<tt>, std::allocator<byte>>, std::allocator<byte>>{f, alloc} {}
 
-		adv_string_buf(const EncMetric<tt> &format, const std::allocator<byte> &alloc = std::allocator<byte>{}) : adv_string_buf{EncMetric_info<WIDE<tt>>{format}, alloc} {}
+		adv_string_buf(const EncMetric<tt> *format, const std::allocator<byte> &alloc = std::allocator<byte>{}) : adv_string_buf{EncMetric_info<WIDE<tt>>{format}, alloc} {}
 };
 
 template<typename T, typename U = std::allocator<byte>>
@@ -264,7 +307,8 @@ class adv_string : public adv_string_view<T>{
 
 		U get_allocator() const noexcept{return bind.get_allocator();}
 		std::size_t capacity() const noexcept{ return bind.dimension;}
-		static adv_string<T, U> newinstance(const_tchar_pt<T>, const U & = U{});
+		static adv_string<T, U> newinstance_ter(const_tchar_pt<T>, const terminate_func<T> &, const U & = U{});
+		static adv_string<T, U> newinstance(const_tchar_pt<T> p, const U &alloc = U{}){return newinstance_ter(p, zero_terminating<T>, alloc);}
 	template<typename S>
 	friend class adv_string_view;
 	template<typename S, typename V, typename R>

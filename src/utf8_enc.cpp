@@ -132,7 +132,6 @@ uint UTF8::encode(const unicode &unin, byte *by, size_t l){
 	}
 	by[0] = byte{static_cast<uint8_t>(uni)};
 	by[0] |= set_mask;
-	std::cout << "D " << (uint)(unin) << std::endl;
 	return y_byte;
 }
 

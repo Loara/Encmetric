@@ -10,7 +10,6 @@ struct three_byte{
 	uint nbyte;
 };
 
-
 class Base64_padding{
 	public:
 		using ctype=three_byte;

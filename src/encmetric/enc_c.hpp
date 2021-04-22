@@ -20,7 +20,7 @@
 #include <encmetric/all_enc.hpp>
 #include <encmetric/config.hpp>
 #include <type_traits>
-#include <iostream>
+//#include <iostream>
 
 namespace adv{
 
@@ -66,7 +66,7 @@ inline adv_string_view<UTF16<bend>> getstring_16(const char16_t *c, size_t len){
 /*
     Detect utf8, utf16 encoding from BOM, if haven't BOM then throw exception
 */
-inline const EncMetric<unicode> &detect_bom(adv_string_view<RAW<unicode>> t){
+inline const EncMetric<unicode> *detect_bom(adv_string_view<RAW<unicode>> t){
 	const_tchar_pt<RAW<unicode>> ptr = t.begin();
 	if(t.size() < 2)
 		throw encoding_error{"No BOM"};
@@ -89,13 +89,13 @@ inline const byte * operator"" _raw(const char *c, std::size_t){
 }
 
 inline astr_view operator"" _asv(const char *b, std::size_t st){
-	return astr_view{b, st, true};
+	return astr_view{b, st, meas::size};
 }
 inline adv_string_view<UTF16<bend>> operator"" _asv(const char16_t *b, std::size_t st){
-	return adv_string_view<UTF16<bend>>{(const byte *)b, st * 2, true};
+	return adv_string_view<UTF16<bend>>{(const byte *)b, st * 2, meas::size};
 }
 inline adv_string_view<UTF32<bend>> operator"" _asv(const char32_t *b, std::size_t st){
-	return adv_string_view<UTF32<bend>>{(const byte *)b, st * 4, true};
+	return adv_string_view<UTF32<bend>>{(const byte *)b, st * 4, meas::size};
 }
 
 }

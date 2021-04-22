@@ -21,11 +21,13 @@
 
 namespace adv{
 
+using std::byte;
+
 /*
     A basic unique_ptr that uses Allocator
 */
-template<typename T, typename U>
-class basic_ptr{
+template<typename U>
+class basic_ptr_0{
 	private:
 		void reset() noexcept{
 			memory = nullptr;
@@ -33,21 +35,21 @@ class basic_ptr{
 		}
 		U alloc;
 	public:
-		T *memory;
+		byte *memory;
 		std::size_t dimension;
-		basic_ptr(const U &all = U{}) : alloc{all}, memory{nullptr}, dimension{0} {}
-		explicit basic_ptr(std::size_t dim, const U &all = U{}) : alloc{all}, memory{nullptr}, dimension{0} {
+		basic_ptr_0(const U &all = U{}) : alloc{all}, memory{nullptr}, dimension{0} {}
+		explicit basic_ptr_0(std::size_t dim, const U &all = U{}) : alloc{all}, memory{nullptr}, dimension{0} {
 			if(dim>0){
 				dimension = dim;
 				memory = std::allocator_traits<U>::allocate(alloc, dim);
 			}
 		}
-		explicit basic_ptr(const T *pt, std::size_t dim, const U &all = U{}) : basic_ptr{dim, all} {
+		explicit basic_ptr_0(const byte *pt, std::size_t dim, const U &all = U{}) : basic_ptr_0{dim, all} {
 			if(dim > 0 && pt != nullptr)
-				std::memcpy(memory, pt, dim * sizeof(T));
+				std::memcpy(memory, pt, dim);
 		}
-		basic_ptr(const basic_ptr<T, U> &) = delete;
-		basic_ptr(basic_ptr<T, U> &&from) noexcept : memory{std::move(from.memory)}, dimension{from.dimension}, alloc{std::move(from.alloc)}
+		basic_ptr_0(const basic_ptr_0<U> &) = delete;
+		basic_ptr_0(basic_ptr_0<U> &&from) noexcept : memory{std::move(from.memory)}, dimension{from.dimension}, alloc{std::move(from.alloc)}
 		{
 			from.reset();
 		}
@@ -58,7 +60,7 @@ class basic_ptr{
 			}
 			dimension = 0;
 		}
-		~basic_ptr(){
+		~basic_ptr_0(){
 			try{
 				free();
 			}
@@ -66,23 +68,23 @@ class basic_ptr{
 				memory = nullptr;
 			}
 		}
-		void swap(basic_ptr<T, U> &sw) noexcept{
+		void swap(basic_ptr_0<U> &sw) noexcept{
 			std::swap(memory, sw.memory);
 			std::swap(dimension, sw.dimension);
 			std::swap(alloc, sw.alloc);
 		}
-		basic_ptr<T, U> &operator=(basic_ptr<T, U> &&ref) noexcept{
+		basic_ptr_0<U> &operator=(basic_ptr_0<U> &&ref) noexcept{
 			free();
 			swap(ref);
 			return *this;
 		}
-		basic_ptr<T, U> &operator=(const basic_ptr<T, U> &)=delete;
+		basic_ptr_0<U> &operator=(const basic_ptr_0<U> &)=delete;
 
 		void reallocate(std::size_t dim){
-			T *newm = std::allocator_traits<U>::allocate(alloc, dim);
+			byte *newm = std::allocator_traits<U>::allocate(alloc, dim);
 			int mindim = dim > dimension ? dimension : dim;
 			if(memory != nullptr)
-				std::memcpy(newm, memory, mindim * sizeof(T));
+				std::memcpy(newm, memory, mindim);
 			free();
 			dimension = dim;
 			memory = newm;
@@ -100,13 +102,13 @@ class basic_ptr{
 			return ptr so that
 			ptr - newmem = oldptr - oldmem
 		*/
-		T *exp_fit_and_transfer(std::size_t fit, const T *oldptr){
+		byte *exp_fit_and_transfer(std::size_t fit, const byte *oldptr){
 			std::ptrdiff_t ptdif = oldptr - memory;
 			exp_fit(fit);
 			return memory + ptdif;
 		}
-		T* leave() noexcept{
-			T *ret = nullptr;
+		byte* leave() noexcept{
+			byte *ret = nullptr;
 			std::swap(ret, memory);
 			dimension = 0;
 			return ret;
@@ -115,10 +117,14 @@ class basic_ptr{
 		U get_allocator() const noexcept{
 			return alloc;
 		}
-		basic_ptr<T, U> copy() const{
-			return basic_ptr<T, U>{memory, dimension, alloc};
+		basic_ptr_0<U> copy() const{
+			return basic_ptr_0<U>{memory, dimension, alloc};
 		}
 };
+
+//Temporarly
+template<typename T, typename U>
+using basic_ptr = basic_ptr_0<U>;
 
 /*
 template<typename T, typename U>

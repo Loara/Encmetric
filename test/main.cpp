@@ -9,6 +9,7 @@ template class tchar_pt<ISO_8859_1>;
 template class tchar_pt<WIDE<byte>>;
 
 int main(){
+    adv_string_view<UTF8> i = "Hello"_asv;
 	adv_string_view<UTF16LE> ay{u"areèò"};
 	adv_string_buf<UTF8> b{};
 	b.append_string_c(ay);
