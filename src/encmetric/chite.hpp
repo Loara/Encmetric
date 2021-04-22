@@ -41,7 +41,7 @@ namespace adv{
 template<typename T, typename U, typename B>
 class base_tchar_pt{
 	private:
-		using data_type = B;
+		using data_type_0 = B;
 		/*
 		    Static cast operations
 		*/
@@ -49,13 +49,14 @@ class base_tchar_pt{
 		U& instance() noexcept {return *(mycast());}
 		const U* mycast() const noexcept {return static_cast<const U*>(this);}
 		const U& instance() const noexcept {return *(mycast());}
-		U p_new_instance(data_type *bin) const noexcept {return mycast()->new_instance(bin);}
+		U p_new_instance(data_type_0 *bin) const noexcept {return mycast()->new_instance(bin);}
 
 	protected:
-		data_type *ptr;
+		data_type_0 *ptr;
 		EncMetric_info<T> ei;
-		explicit base_tchar_pt(data_type *b, EncMetric_info<T> f) : ptr{b}, ei{f} {}
+		explicit base_tchar_pt(data_type_0 *b, EncMetric_info<T> f) : ptr{b}, ei{f} {}
 	public:
+        using data_type = data_type_0;
 		using ctype = typename EncMetric_info<T>::ctype;
 		using static_enc = T;
 		/*
@@ -148,7 +149,7 @@ class base_tchar_pt{
 template<typename T, typename U>
 class wbase_tchar_pt : public base_tchar_pt<T, U, byte>{
 	protected:
-		explicit wbase_tchar_pt(byte *b, EncMetric_info<T> f) : base_tchar_pt<T, U, byte>{b, this->ei} {}
+		explicit wbase_tchar_pt(byte *b, EncMetric_info<T> f) : base_tchar_pt<T, U, byte>{b, f} {}
 	public:
 		uint encode(const typename base_tchar_pt<T, U, byte>::ctype &uni, size_t l) const {return this->ei.encode(uni, this->ptr, l);}
 };
@@ -161,31 +162,35 @@ class const_tchar_pt : public base_tchar_pt<T, const_tchar_pt<T>, byte const>{
 	public:
 		explicit const_tchar_pt(const byte *c, EncMetric_info<T> f) : base_tchar_pt<T, const_tchar_pt<T>, byte const>{c, f} {}
 
-		template<typename... Args>
-		explicit const_tchar_pt(const byte *c, Args... arg) : const_tchar_pt{c, EncMetric_info<T>{arg...}} {}
-		template<typename... Args>
-		explicit const_tchar_pt(const char *c, Args... arg) : const_tchar_pt{reinterpret_cast<const byte *>(c), EncMetric_info<T>{arg...}} {}
-		template<typename... Args>
-		explicit const_tchar_pt(const char16_t *c, Args... arg) : const_tchar_pt{reinterpret_cast<const byte *>(c), EncMetric_info<T>{arg...}} {}
-		template<typename... Args>
-		explicit const_tchar_pt(const char32_t *c, Args... arg) : const_tchar_pt{reinterpret_cast<const byte *>(c), EncMetric_info<T>{arg...}} {}
-		template<typename... Args>
-		explicit const_tchar_pt(byte *c, Args... arg) : const_tchar_pt{static_cast<const byte *>(c), EncMetric_info<T>{arg...}} {}
-		template<typename... Args>
-		explicit const_tchar_pt(char *c, Args... arg) : const_tchar_pt{reinterpret_cast<const byte *>(c), EncMetric_info<T>{arg...}} {}
-		template<typename... Args>
-		explicit const_tchar_pt(char16_t *c, Args... arg) : const_tchar_pt{reinterpret_cast<const byte *>(c), EncMetric_info<T>{arg...}} {}
-		template<typename... Args>
-		explicit const_tchar_pt(char32_t *c, Args... arg) : const_tchar_pt{reinterpret_cast<const byte *>(c), EncMetric_info<T>{arg...}} {}
+		explicit const_tchar_pt(const byte *c) : const_tchar_pt{c, {}} {}
+		explicit const_tchar_pt(const char *c) : const_tchar_pt{reinterpret_cast<const byte *>(c), {}} {}
+		explicit const_tchar_pt(const char16_t *c) : const_tchar_pt{reinterpret_cast<const byte *>(c), {}} {}
+		explicit const_tchar_pt(const char32_t *c) : const_tchar_pt{reinterpret_cast<const byte *>(c), {}} {}
 
-		template<typename... Args>
-		explicit const_tchar_pt(Args... arg) : const_tchar_pt{static_cast<const byte *>(nullptr), EncMetric_info<T>{arg...}} {}
+		explicit const_tchar_pt() : const_tchar_pt{static_cast<const byte *>(nullptr), {}} {}
 
 		//bool terminate() const {return is_all_zero(this->ptr, this->ei.unity());}
         //No more required
 
 		const_tchar_pt new_instance(const byte *c) const{return const_tchar_pt<T>{c, this->ei};}
-		const_tchar_pt new_instance(const char *c) const{return const_tchar_pt<T>{c, this->ei};}
+		const_tchar_pt new_instance(const char *c) const{return const_tchar_pt<T>{reinterpret_cast<const byte *>(c), this->ei};}
+};
+template<typename tt>
+class const_tchar_pt<WIDE<tt>> : public base_tchar_pt<WIDE<tt>, const_tchar_pt<WIDE<tt>>, byte const>{
+	public:
+		explicit const_tchar_pt(const byte *c, EncMetric_info<WIDE<tt>> f) : base_tchar_pt<WIDE<tt>, const_tchar_pt<WIDE<tt>>, byte const>{c, f} {}
+
+		explicit const_tchar_pt(const byte *c, const EncMetric<tt> *format) : const_tchar_pt{c, EncMetric_info<WIDE<tt>>{format}} {}
+		explicit const_tchar_pt(const char *c, const EncMetric<tt> *format) : const_tchar_pt{reinterpret_cast<const byte *>(c), EncMetric_info<WIDE<tt>>{format}} {}
+		explicit const_tchar_pt(const char16_t *c, const EncMetric<tt> *format) : const_tchar_pt{reinterpret_cast<const byte *>(c), EncMetric_info<WIDE<tt>>{format}} {}
+		explicit const_tchar_pt(const char32_t *c, const EncMetric<tt> *format) : const_tchar_pt{reinterpret_cast<const byte *>(c), EncMetric_info<WIDE<tt>>{format}} {}
+		explicit const_tchar_pt(const EncMetric<tt> *format) : const_tchar_pt{static_cast<const byte *>(nullptr), EncMetric_info<WIDE<tt>>{format}} {}
+
+		//bool terminate() const {return is_all_zero(this->ptr, this->ei.unity());}
+        //No more required
+
+		const_tchar_pt new_instance(const byte *c) const{return const_tchar_pt<WIDE<tt>>{c, this->ei};}
+		const_tchar_pt new_instance(const char *c) const{return const_tchar_pt<WIDE<tt>>{reinterpret_cast<const byte*>(c), this->ei};}
 };
 
 template<typename T>
@@ -193,22 +198,79 @@ class tchar_pt : public wbase_tchar_pt<T, tchar_pt<T>>{
 	public:
 		explicit tchar_pt(byte *c, EncMetric_info<T> f) : wbase_tchar_pt<T, tchar_pt<T>>{c, f} {}
 
-		template<typename... Arg>
-		explicit tchar_pt(byte *c, Arg... arg) : tchar_pt{c, EncMetric_info<T>{arg...}} {}
-		template<typename... Arg>
-		explicit tchar_pt(char *c, Arg... arg) : tchar_pt{reinterpret_cast<byte *>(c), EncMetric_info<T>{arg...}} {}
-		template<typename... Arg>
-		explicit tchar_pt(char16_t *c, Arg... arg) : tchar_pt{reinterpret_cast<byte *>(c), EncMetric_info<T>{arg...}} {}
-		template<typename... Arg>
-		explicit tchar_pt(char32_t *c, Arg... arg) : tchar_pt{reinterpret_cast<byte *>(c), EncMetric_info<T>{arg...}} {}
-		template<typename... Arg>
-		explicit tchar_pt(Arg... arg) : tchar_pt{static_cast<byte *>(nullptr), EncMetric_info<T>{arg...}} {}
+		explicit tchar_pt(byte *c) : wbase_tchar_pt<T, tchar_pt<T>>{c, {}} {}
+		explicit tchar_pt(char *c) : tchar_pt{reinterpret_cast<byte *>(c), {}} {}
+		explicit tchar_pt(char16_t *c) : tchar_pt{reinterpret_cast<byte *>(c), {}} {}
+		explicit tchar_pt(char32_t *c) : tchar_pt{reinterpret_cast<byte *>(c), {}} {}
+
+		explicit tchar_pt() : tchar_pt{static_cast<byte *>(nullptr), {}} {}
 
 		//bool terminate() const {return is_all_zero(this->ptr, this->ei.unity());}
 		const_tchar_pt<T> cast() const noexcept{ return const_tchar_pt<T>{this->ptr, this->ei};}
 
 		tchar_pt new_instance(byte *c) const{return tchar_pt<T>{c, this->ei};}
-		tchar_pt new_instance(char *c) const{return tchar_pt<T>{c, this->ei};}
+		tchar_pt new_instance(char *c) const{return tchar_pt<T>{reinterpret_cast<byte *>(c), this->ei};}
+};
+
+template<typename tt>
+class tchar_pt<WIDE<tt>> : public wbase_tchar_pt<WIDE<tt>, tchar_pt<WIDE<tt>>>{
+	public:
+		explicit tchar_pt(byte *c, EncMetric_info<WIDE<tt>> f) : wbase_tchar_pt<WIDE<tt>, tchar_pt<WIDE<tt>>>{c, f} {}
+
+		explicit tchar_pt(byte *c, const EncMetric<tt> *format) : wbase_tchar_pt<WIDE<tt>, tchar_pt<WIDE<tt>>>{c, EncMetric_info<WIDE<tt>>{format}} {}
+		explicit tchar_pt(char *c, const EncMetric<tt> *format) : tchar_pt{reinterpret_cast<byte *>(c), EncMetric_info<WIDE<tt>>{format}} {}
+		explicit tchar_pt(char16_t *c, const EncMetric<tt> *format) : tchar_pt{reinterpret_cast<byte *>(c), EncMetric_info<WIDE<tt>>{format}} {}
+		explicit tchar_pt(char32_t *c, const EncMetric<tt> *format) : tchar_pt{reinterpret_cast<byte *>(c), EncMetric_info<WIDE<tt>>{format}} {}
+
+		explicit tchar_pt(const EncMetric<tt> *form) : tchar_pt{static_cast<byte *>(nullptr), EncMetric_info<WIDE<tt>>{form}} {}
+
+		//bool terminate() const {return is_all_zero(this->ptr, this->ei.unity());}
+		const_tchar_pt<WIDE<tt>> cast() const noexcept{ return const_tchar_pt<WIDE<tt>>{this->ptr, this->ei};}
+
+		tchar_pt new_instance(byte *c) const{return tchar_pt<WIDE<tt>>{c, this->ei};}
+		tchar_pt new_instance(char *c) const{return tchar_pt<WIDE<tt>>{reinterpret_cast<byte *>(c), this->ei};}
+};
+//---------------------------------------------
+
+/*
+ * Relative pointer type. Useful for reallocations of principal pointer
+ */
+template<typename T>
+class tchar_relative{
+    private:
+        const tchar_pt<T> &ptr;
+        std::ptrdiff_t dif;
+    public:
+        using ctype = typename T::ctype;
+        tchar_relative(const tchar_pt<T> &fr, std::ptrdiff_t t = 0) : ptr{fr}, dif{t} {}
+        tchar_relative(tchar_pt<T> &&, std::ptrdiff_t = 0) =delete;
+        byte *data() const {return ptr.data() + dif;}
+        std::ptrdiff_t difff() const noexcept {return dif;}
+		EncMetric_info<T> raw_format() const noexcept{ return ptr.raw_format();}
+		uint unity() const noexcept {return raw_format().unity();}
+		bool has_max() const noexcept {return raw_format().has_max();}
+		uint max_bytes() const noexcept {return raw_format().max_bytes();}
+		bool is_fixed() const noexcept {return raw_format().is_fixed();}
+		uint chLen() const {return raw_format().chLen(data());}
+		bool validChar(uint &l) const noexcept {return raw_format().validChar(data(), l);}
+		uint decode(ctype *uni, size_t l) const {return raw_format().decode(uni, data(), l);}
+		uint encode(ctype &uni, size_t l) const {return raw_format().encode(uni, data(), l);}
+
+		tchar_pt<T> convert() const noexcept {return ptr.new_instance(data());}
+		tchar_relative operator+(std::ptrdiff_t t) const{
+            return tchar_relative(ptr, dif + t);
+        }
+		uint next(){
+			if constexpr(fixed_size<T>){
+				dif += T::unity();
+				return T::unity();
+			}
+			else{
+				uint add = raw_format().chLen(data());
+				dif += add;
+				return add;
+			}
+		}
 };
 
 //---------------------------------------------

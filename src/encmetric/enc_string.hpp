@@ -179,7 +179,7 @@ class adv_string_view{
 		adv_string_view<S> basic_encoding_conversion(tchar_pt<S> buffer, size_t blen) const;
 
 		template<typename U = std::allocator<byte>>
-		adv_string<WIDE<typename T::ctype>, U> basic_encoding_conversion(const EncMetric<typename T::ctype> &, const U & = U{}) const;
+		adv_string<WIDE<typename T::ctype>, U> basic_encoding_conversion(const EncMetric<typename T::ctype> *, const U & = U{}) const;
 
 		template<typename S, typename U = std::allocator<byte>>
 		adv_string<S, U> basic_encoding_conversion(const U & = U{}) const;
@@ -272,8 +272,8 @@ class adv_string_buf<WIDE<tt>, U> : public adv_string_buf_0<WIDE<tt>, adv_string
 	public:
 		adv_string_buf(EncMetric_info<WIDE<tt>> f, const U & alloc = U{}) : adv_string_buf_0<WIDE<tt>, adv_string_buf<WIDE<tt>, U>, U>{f, alloc} {}
 
-		adv_string_buf(const EncMetric<tt> &format, const U &alloc = U{}) : adv_string_buf{EncMetric_info<WIDE<tt>>{format}, alloc} {}
-		adv_string_buf(const EncMetric<tt> &format, size_t indim, const U &alloc = U{}) : adv_string_buf{EncMetric_info<WIDE<tt>>{format}, indim, alloc} {}
+		adv_string_buf(const EncMetric<tt> *format, const U &alloc = U{}) : adv_string_buf{EncMetric_info<WIDE<tt>>{format}, alloc} {}
+		adv_string_buf(const EncMetric<tt> *format, size_t indim, const U &alloc = U{}) : adv_string_buf{EncMetric_info<WIDE<tt>>{format}, indim, alloc} {}
 		adv_string_buf(adv_string_view<WIDE<tt>> str, const U &alloc= U{}) : adv_string_buf{EncMetric_info<WIDE<tt>>{str.format()}, alloc} {
 			append_string(str);
 		}
@@ -284,7 +284,7 @@ class adv_string_buf<WIDE<tt>, std::allocator<byte>> : public adv_string_buf_0<W
 	public:
 		adv_string_buf(EncMetric_info<WIDE<tt>> f, const std::allocator<byte> & alloc = std::allocator<byte>{}) : adv_string_buf_0<WIDE<tt>, adv_string_buf<WIDE<tt>, std::allocator<byte>>, std::allocator<byte>>{f, alloc} {}
 
-		adv_string_buf(const EncMetric<tt> &format, const std::allocator<byte> &alloc = std::allocator<byte>{}) : adv_string_buf{EncMetric_info<WIDE<tt>>{format}, alloc} {}
+		adv_string_buf(const EncMetric<tt> *format, const std::allocator<byte> &alloc = std::allocator<byte>{}) : adv_string_buf{EncMetric_info<WIDE<tt>>{format}, alloc} {}
 };
 
 template<typename T, typename U = std::allocator<byte>>

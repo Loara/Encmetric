@@ -358,6 +358,8 @@ adv_string_view<S> adv_string_view<T>::basic_encoding_conversion(tchar_pt<S> buf
 	}
 	return adv_string_view<S>(buffer, blen-sadby);
 }
+/*
+ Stable version
 
 template<typename T>
 template<typename U>
@@ -473,6 +475,135 @@ adv_string<S, U> adv_string_view<T>::basic_encoding_conversion(const U &alloc) c
 	}
 	return adv_string<S, U>{new_to, len, newsiz, std::move(temp)};
 }
+*/
+
+template<typename T>
+template<typename U>
+adv_string<WIDE<typename T::ctype>, U> adv_string_view<T>::basic_encoding_conversion(const EncMetric<typename T::ctype> *format, const U &alloc) const{
+	basic_ptr<byte, U> temp{len * format->d_unity(), alloc};
+	const_tchar_pt<T> from = ptr;
+    tchar_pt<WIDE<typename T::ctype>> destination{temp.memory, format};
+    tchar_relative<WIDE<typename T::ctype>> to{destination};
+
+	size_t remsiz = temp.dimension;
+	size_t newsiz = 0;
+	size_t input_len = siz;
+
+	if(len == 0)
+		return adv_string<WIDE<typename T::ctype>, U>{destination.cast(), 0, 0, std::move(temp)};
+	if(format->d_fixed_size()){
+		for(size_t i=0; i<len; i++){
+			typename T::ctype uni;
+			size_t read = from.decode(&uni, input_len);
+			size_t write = to.encode(uni, remsiz);
+			if(input_len < read)
+				throw encoding_error();
+			input_len -= read;
+			if(remsiz < write)
+				throw encoding_error();
+			remsiz -= write;
+			newsiz += write;
+			from.next();
+			to.next();
+		}
+		return adv_string<WIDE<typename T::ctype>, U>{destination.cast(), len, newsiz, std::move(temp)};
+	}
+	else{
+		for(size_t i=0; i<len; i++){
+			typename T::ctype uni;
+			size_t read = from.decode(&uni, input_len);
+            bool completewrite = false;
+            size_t write = 0;
+            while(!completewrite){
+                try{
+                    write = to.encode(uni, remsiz);
+                    completewrite = true;
+                }
+                catch(const buffer_small &bs){
+                    size_t olddim = temp.dimension;
+                    temp.exp_fit(olddim + bs.get_required_size() +1);
+                    remsiz += temp.dimension - olddim;
+                    destination = destination.new_instance(temp.memory);
+                }
+            }
+			if(input_len < read)
+				throw encoding_error();
+			input_len -= read;
+			if(remsiz < write)
+				throw encoding_error();
+			remsiz -= write;
+			newsiz += write;
+			from.next();
+			to.next();
+		}
+		return adv_string<WIDE<typename T::ctype>, U>{destination.cast(), len, newsiz, std::move(temp)};
+	}
+}
+
+template<typename T>
+template<typename S, typename U>
+adv_string<S, U> adv_string_view<T>::basic_encoding_conversion(const U &alloc) const{
+	basic_ptr<byte, U> temp{len * S::unity(), alloc};
+	const_tchar_pt<T> from = ptr;
+    tchar_pt<S> destination{temp.memory};
+    tchar_relative<S> to{destination};
+
+	size_t remsiz = temp.dimension;
+	size_t newsiz = 0;
+	size_t input_len = siz;
+
+	if(len == 0)
+		return adv_string<S, U>{destination.cast(), 0, 0, std::move(temp)};
+	if constexpr (fixed_size<S>){
+		for(size_t i=0; i<len; i++){
+			typename T::ctype uni;
+			size_t read = from.decode(&uni, input_len);
+			size_t write = to.encode(uni, remsiz);
+			if(input_len < read)
+				throw encoding_error();
+			input_len -= read;
+			if(remsiz < write)
+				throw encoding_error();
+			remsiz -= write;
+			newsiz += write;
+			from.next();
+			to.next();
+		}
+		return adv_string<S, U>{destination.cast(), len, newsiz, std::move(temp)};
+	}
+	else{
+		for(size_t i=0; i<len; i++){
+			typename T::ctype uni;
+			size_t read = from.decode(&uni, input_len);
+            bool completewrite = false;
+            size_t write = 0;
+            while(!completewrite){
+                try{
+                    write = to.encode(uni, remsiz);
+                    completewrite = true;
+                }
+                catch(const buffer_small &bs){
+                    size_t olddim = temp.dimension;
+                    temp.exp_fit(olddim + bs.get_required_size() +1);
+                    remsiz += temp.dimension - olddim;
+                    destination = destination.new_instance(temp.memory);
+                }
+            }
+			if(input_len < read)
+				throw encoding_error();
+			input_len -= read;
+
+			if(remsiz < write)
+				throw encoding_error();
+			remsiz -= write;
+			newsiz += write;
+			from.next();
+			to.next();
+		}
+		return adv_string<S, U>{destination.cast(), len, newsiz, std::move(temp)};
+	}
+}
+
 
 template<typename T>
 template<typename S, typename U>

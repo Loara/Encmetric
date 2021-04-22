@@ -244,9 +244,9 @@ class DynEncoding : public EncMetric<typename T::ctype>{
 
 		bool d_fixed_size() const noexcept {return fixed_size<T>;}
 
-		static const EncMetric<typename T::ctype> &instance() noexcept{
+		static const EncMetric<typename T::ctype> *instance() noexcept{
 			static DynEncoding<T> t{};
-			return t;
+			return &t;
 		}
 };
 
@@ -258,8 +258,7 @@ class EncMetric_info{
 	public:
 		EncMetric_info(const EncMetric_info<T> &) noexcept {}
 
-		template<typename... Arg>
-		EncMetric_info(Arg...) {static_assert(sizeof...(Arg) == 0, "Invalid arguments");}
+		EncMetric_info() {}
 		using ctype=typename T::ctype;
 		const EncMetric<ctype> &format() const noexcept {return DynEncoding<T>::instance();}
 
@@ -280,8 +279,8 @@ class EncMetric_info<WIDE<tt>>{
 		const EncMetric<tt> *f;
 	public:
 		using ctype=tt;
-		template<typename... Arg>
-		EncMetric_info(const EncMetric<tt> &format, Arg...) : f{&format} {static_assert(sizeof...(Arg) == 0, "Invalid arguments");}
+		EncMetric_info(const EncMetric<tt> *format) : f{format} {}
+		EncMetric_info(const EncMetric_info &info) : f{info.f} {}
 
 		const EncMetric<tt> &format() const noexcept {return *f;}
 		uint unity() const noexcept {return f->d_unity();}
