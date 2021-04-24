@@ -75,12 +75,12 @@ tchar_pt<S> reassign(tchar_pt<T> p){
 		return tchar_pt<S>{p.data()};
 	}
 	else if constexpr( is_wide_v<S> ){
-		static_assert(is_raw_v<T> || std::is_same_v<typename S::ctype, typename T::ctype>, "Impossible to convert these strings");
+		static_assert(is_raw_v<T> || std::is_same_v<typename S::ctype, typename T::ctype>, "Impossible to reassign this string");
 		return tchar_pt<S>{p.data(), DynEncoding<T>::instance()};
 	}
 	else{
 		if(!sameEnc<S>(p.cast()))
-			throw encoding_error("Impossible to convert these strings");
+			throw encoding_error("Impossible to reassign this string");
 		return tchar_pt<S>(p.data());
 	}
 }
