@@ -275,18 +275,6 @@ class tchar_relative{
 
 //---------------------------------------------
 
-/*
-    Test if the pointers have the same encoding (if one of them has WIDENC encoding then control the f field)
-*/
-template<typename S, typename T>
-inline constexpr bool sameEnc_static = std::is_same_v<typename index_traits<S>::type_enc, typename index_traits<T>::type_enc>;
-template<typename S, typename tt>
-inline constexpr bool sameEnc_static<S, WIDE<tt>> = false;
-template<typename tt, typename T>
-inline constexpr bool sameEnc_static<WIDE<tt>, T> = false;
-template<typename ss, typename tt>
-inline constexpr bool sameEnc_static<WIDE<ss>, WIDE<tt>> = false;
-
 template<typename S, typename T>
 bool sameEnc(const const_tchar_pt<S> &, const const_tchar_pt<T> &) noexcept;
 template<typename T1, typename T2>

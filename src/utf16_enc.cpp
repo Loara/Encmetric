@@ -15,8 +15,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Encmetric. If not, see <http://www.gnu.org/licenses/>.
 */
-#define encmetric_library
-#include <encmetric/utf16_enc.hpp>
+#include <encmetric/utf16_enc_0.hpp>
 
 namespace adv{
 

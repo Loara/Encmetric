@@ -16,11 +16,28 @@
     You should have received a copy of the GNU Lesser General Public License
     along with Encmetric. If not, see <http://www.gnu.org/licenses/>.
 */
-#include <encmetric/utf16_enc_0.hpp>
+/*
+ * Never include directly this header, use instead utf32_enc.hpp
+ */
+#include <encmetric/chite.hpp>
+#include <encmetric/byte_tools.hpp>
 
 namespace adv{
 
-extern template class UTF16<true>;
-extern template class UTF16<false>;
+template<bool be>
+class UTF32{
+	public:
+		using ctype=unicode;
+		static constexpr uint unity() noexcept {return 4;}
+		static constexpr bool has_max() noexcept {return true;}
+		static constexpr uint max_bytes() noexcept {return 4;}
+		static uint chLen(const byte *){ return 4;}
+		static bool validChar(const byte *, uint &chlen) noexcept;
+		static uint decode(unicode *uni, const byte *by, size_t l);
+		static uint encode(const unicode &uni, byte *by, size_t l);
+};
+
+using UTF32LE = UTF32<false>;
+using UTF32BE = UTF32<true>;
 
 }

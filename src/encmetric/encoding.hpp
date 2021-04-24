@@ -42,35 +42,11 @@
 #include <typeindex>
 #include <type_traits>
 #include <cstring>
-#include <iostream>
+#include <encmetric/exceptions.hpp>
 
 namespace adv{
 
 inline void copyN(const byte *src, byte *des, size_t l) {std::memcpy(des, src, l);}
-
-class encoding_error : public std::exception{
-	private:
-		const char *c;
-	public:
-		encoding_error(const char *ms) : c{ms} {}
-		encoding_error() : encoding_error{"EncMetric error"} {}
-		const char *what() const noexcept override {return c;}
-};
-class buffer_small : public encoding_error{
-	private:
-		/*
-			Minimum size required, 0 if not determined
-		*/
-		uint mins;
-	public:
-		buffer_small(const char *ms) : encoding_error{ms}, mins{0} {}
-		buffer_small() : encoding_error{"Buffer is too small"}, mins{0} {}
-		buffer_small(uint ms) : encoding_error{"Buffer is too small"}, mins{ms} {}
-		uint get_required_size() const noexcept{
-			return mins;
-		}
-};
-
 
 template<typename T>
 class EncMetric{
@@ -121,10 +97,7 @@ class RAW{
 
 using RAWchr=RAW<unicode>;
 
-template<typename S, typename T>
-struct same_data : public std::is_same<typename S::ctype, typename T::ctype> {};
-template<typename S, typename T>
-inline constexpr bool same_data_v = same_data<S, T>::value;
+//-------------------------------------------
 
 template<typename U>
 struct is_wide : public std::false_type {};
@@ -134,10 +107,59 @@ struct is_wide<WIDE<tt>> : public std::true_type {};
 template<typename T>
 inline constexpr bool is_wide_v = is_wide<T>::value;
 
+template<typename T, typename U, typename...>
+struct enable_wide : public std::enable_if<is_wide_v<T>, U> {};
+template<typename T, typename U, typename...>
+struct enable_not_wide : public std::enable_if<!is_wide_v<T>, U>{};
+
+template<typename T, typename U, typename... Args>
+using enable_wide_t = typename enable_wide<T, U, Args...>::type;
+template<typename T, typename U, typename... Args>
+using enable_not_wide_t = typename enable_not_wide<T, U, Args...>::type;
+
+/*
+    index_traits control if encoding class ovverides the index
+*/
+template<typename T, enable_not_wide_t<T, int>, typename>
+struct index_traits_0{
+	using type_enc=T;
+};
+
+template<typename T>
+struct index_traits_0<T, 0, std::void_t<typename T::equivalent_enc>>{
+	using type_enc=typename T::equivalent_enc;
+};
+
+template<typename T>
+struct index_traits : public index_traits_0<T, 0, void> {
+	static std::type_index index() noexcept {return std::type_index{typeid(typename index_traits_0<T, 0, void>::type_enc)};}
+};
+
+/*
+ * Test if both encodings work on the same data type
+ */
+template<typename S, typename T>
+struct same_data : public std::is_same<typename S::ctype, typename T::ctype> {};
+template<typename S, typename T>
+inline constexpr bool same_data_v = same_data<S, T>::value;
+
+/*
+    Test if types refer to the same encoding
+*/
+template<typename S, typename T>
+inline constexpr bool sameEnc_static = std::is_same_v<typename index_traits<S>::type_enc, typename index_traits<T>::type_enc>;
+
+template<typename S, typename tt>
+inline constexpr bool sameEnc_static<S, WIDE<tt>> = false;
+
+template<typename tt, typename T>
+inline constexpr bool sameEnc_static<WIDE<tt>, T> = false;
+
+template<typename ss, typename tt>
+inline constexpr bool sameEnc_static<WIDE<ss>, WIDE<tt>> = false;
+
 template<typename U>
-struct is_raw : public std::false_type {};
-template<typename tt>
-struct is_raw<RAW<tt>> : public std::true_type {};
+struct is_raw : public std::bool_constant<sameEnc_static<U, RAW<byte>>> {};
 
 template<typename T>
 inline constexpr bool is_raw_v = is_raw<T>::value;
@@ -150,16 +172,6 @@ struct enable_same_data : public std::enable_if<same_data_v<S, T>, U>{};
 
 template<typename S, typename T, typename U, typename... Args>
 using enable_same_data_t = typename enable_same_data<S, T, U, Args...>::type;
-
-template<typename T, typename U, typename...>
-struct enable_wide : public std::enable_if<is_wide_v<T>, U> {};
-template<typename T, typename U, typename...>
-struct enable_not_wide : public std::enable_if<!is_wide_v<T>, U>{};
-
-template<typename T, typename U, typename... Args>
-using enable_wide_t = typename enable_wide<T, U, Args...>::type;
-template<typename T, typename U, typename... Args>
-using enable_not_wide_t = typename enable_not_wide<T, U, Args...>::type;
 
 template<typename T>
 inline constexpr bool safe_hasmax = T::has_max();
@@ -181,35 +193,17 @@ int min_length(int nchr, const EncMetric<tt> &format) noexcept{
 }
 
 template<typename T>
-constexpr int max_length(int nchr){
+constexpr int max_length(uint nchr){
 	static_assert(safe_hasmax<T>, "This encoding has no superior limit");
 	return T::max_bytes() * nchr;
 }
 template<typename tt>
-int max_length(int nchr, const EncMetric<tt> &format){
+int max_length(uint nchr, const EncMetric<tt> &format){
 	if(format.d_has_max())
 		return format.d_max_bytes() * nchr;
 	else
 		throw encoding_error{"This encoding has no superior limit"};
 }
-
-/*
-    index_traits control if encoding class ovverides the index
-*/
-template<typename T, enable_not_wide_t<T, int>, typename>
-struct index_traits_0{
-	using type_enc=T;
-};
-
-template<typename T>
-struct index_traits_0<T, 0, std::void_t<typename T::equivalent_enc>>{
-	using type_enc=typename T::equivalent_enc;
-};
-
-template<typename T>
-struct index_traits : public index_traits_0<T, 0, void> {
-	static std::type_index index() noexcept {return std::type_index{typeid(typename index_traits_0<T, 0, void>::type_enc)};}
-};
 
 template<typename T>
 constexpr void assert_raw(){static_assert(!is_raw_v<T>, "Using RAW format");}
