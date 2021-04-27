@@ -86,8 +86,8 @@ class basic_ptr_0{
 			if(memory != nullptr)
 				std::memcpy(newm, memory, mindim);
 			free();
-			dimension = dim;
 			memory = newm;
+			dimension = dim;
 		}
 		void exp_fit(std::size_t fit){
 			if(fit == 0)
@@ -122,6 +122,20 @@ class basic_ptr_0{
 		}
 };
 
+/*
+ * Append bytes at a specified position
+ *
+ * Usually final dimension is strictly greater than pos+siz
+ */
+template<typename U>
+void append(basic_ptr_0<U> &mem, std::size_t pos, const byte *from, std::size_t siz){
+	if(mem.dimension < pos + siz){
+		mem.exp_fit(pos+siz);
+	}
+	if(siz != 0)
+        std::memcpy(mem.memory + pos, from, siz);
+}
+
 //Temporarly
 template<typename T, typename U>
 using basic_ptr = basic_ptr_0<U>;
@@ -147,17 +161,6 @@ basic_ptr<T, U> reallocate_expon(const basic_ptr<T, U> &ptr, std::size_t nd){
 	if(ptr.memory != nullptr)
 		std::memcpy(newinc.memory, ptr.memory, ptr.dimension * sizeof(T));
 	return newinc;
-}
-
-template<typename T, typename U>
-void append(basic_ptr<T, U> &mem, std::size_t pos, const T *from, std::size_t siz){
-	if(mem.memory == nullptr)
-		mem.init_a_copy(nullptr, 1);
-
-	if(mem.dimension < pos + siz){
-		mem = reallocate_expon(mem, pos+siz);
-	}
-	std::memcpy(mem.memory + pos, from, siz * sizeof(T));
 }
 */
 

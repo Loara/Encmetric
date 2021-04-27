@@ -19,6 +19,7 @@
 */
 #include <vector>
 #include <memory>
+#include <memory_resource>
 #include <stdexcept>
 #include <type_traits>
 #include <string>
@@ -88,28 +89,10 @@ class adv_string_view{
 		    read exactly len characters and siz bytes. If these values doesn't match trow error
 		*/
 		explicit adv_string_view(const_tchar_pt<T>, size_t siz, size_t len);
-		
-		template<typename U, typename... Arg>
-		explicit adv_string_view(const U *b, Arg... args) : adv_string_view{const_tchar_pt<T>{b, args...}} {}
-		template<typename U, typename Integer, typename... Arg>
-		explicit adv_string_view(const U *b, Integer dim, meas measure, Arg... args) : adv_string_view{const_tchar_pt<T>{b, args...}, dim, measure} {
-            static_assert(std::is_integral_v<Integer> && std::is_unsigned_v<Integer> && !std::is_same_v<Integer, bool>, "Invalid dimension type");
-        }
-		template<typename U, typename Int1, typename Int2, typename... Arg>
-		explicit adv_string_view(const U *b, Int1 siz, Int2 len, Arg... args) : adv_string_view{const_tchar_pt<T>{b, args...}, siz, len} {
-            static_assert(std::is_integral_v<Int1> && std::is_unsigned_v<Int1> && !std::is_same_v<Int1, bool>, "Invalid dimension type");
-            static_assert(std::is_integral_v<Int2> && std::is_unsigned_v<Int2> && !std::is_same_v<Int2, bool>, "Invalid dimension type");
-        }
-		/*
-		    WIDENC costructors
-		
-		template<typename U, enable_wide_t<T, int, U> = 0>
-		explicit adv_string_view(const U *b, const EncMetric<typename T::ctype> &f) : adv_string_view{const_tchar_pt<T>{b, f}} {}
-		template<typename U, enable_wide_t<T, int, U> = 0>
-		explicit adv_string_view(const U *b, size_t dim, meas measure, const EncMetric<typename T::ctype> &f) : adv_string_view{const_tchar_pt<T>{b, f}, dim, measure} {}
-		template<typename U, enable_wide_t<T, int, U> = 0>
-		explicit adv_string_view(const U *b, size_t siz, size_t len, const EncMetric<typename T::ctype> &f) : adv_string_view{const_tchar_pt<T>{b, f}, siz, len} {}
-		*/
+
+		explicit adv_string_view(const byte *b, EncMetric_info<T> f, const terminate_func<T> &tf = zero_terminating<T>) : adv_string_view{const_tchar_pt<T>{b, f}, tf} {}
+		explicit adv_string_view(const byte *b, EncMetric_info<T> f, size_t dim, meas measure) : adv_string_view{const_tchar_pt<T>{b, f}, dim, measure} {}
+		explicit adv_string_view(const byte *b, EncMetric_info<T> f, size_t siz, size_t len) : adv_string_view{const_tchar_pt<T>{b, f}, siz, len} {}
 
 		virtual ~adv_string_view() {}
 		/*
@@ -189,9 +172,32 @@ class adv_string_view{
 
 	template<typename W, typename S>
 	friend adv_string_view<W> reassign(const adv_string_view<S> &);
-	template<typename S, typename V, typename R>
-	friend class adv_string_buf_0;
+	template<typename S, typename R>
+	friend class adv_string_buf;
 };
+
+/*
+ * Other costructors
+ */
+template<typename T, typename U, enable_not_wide_t<T, int> =0>
+adv_string_view<T> new_str_view(const U *b, const terminate_func<T> &tf = zero_terminating<T>) {return adv_string_view<T>{new_const_tchar_pt<T>(b), tf};}
+
+template<typename T, typename U, enable_not_wide_t<T, int> =0>
+adv_string_view<T> new_str_view(const U *b, size_t dim, meas measure){ return adv_string_view<T>{new_const_tchar_pt<T>(b), dim, measure};}
+
+template<typename T, typename U, enable_not_wide_t<T, int> =0>
+adv_string_view<T> new_str_view(const U *b, size_t siz, size_t len){ return adv_string_view<T>{new_const_tchar_pt<T>(b), siz, len};}
+
+
+template<typename T, typename U, enable_wide_t<T, int> =0>
+adv_string_view<T> new_str_view(const U *b, const EncMetric<typename T::ctype> *format, const terminate_func<T> &tf = zero_terminating<T>) {return adv_string_view<T>{new_const_tchar_pt<T>(b, format), tf};}
+
+template<typename T, typename U, enable_wide_t<T, int> =0>
+adv_string_view<T> new_str_view(const U *b, const EncMetric<typename T::ctype> *format, size_t dim, meas measure){ return adv_string_view<T>{new_const_tchar_pt<T>(b, format), dim, measure};}
+
+template<typename T, typename U, enable_wide_t<T, int> =0>
+adv_string_view<T> new_str_view(const U *b, const EncMetric<typename T::ctype> *format, size_t siz, size_t len){ return adv_string_view<T>{new_const_tchar_pt<T>(b, format), siz, len};}
+
 
 template<typename T, typename S>
 bool sameEnc(const adv_string_view<T> &a, const adv_string_view<S> &b) noexcept{
@@ -206,21 +212,19 @@ adv_string_view<S> reassign(const adv_string_view<T> &ret){
 		return adv_string_view<S>{reassign<S, T>(ret.begin()), ret.length(), ret.size()};
 }
 
-template<typename T, typename V, typename U = std::allocator<byte>>
-class adv_string_buf_0{
+template<typename T, typename U = std::pmr::polymorphic_allocator<byte>>
+class adv_string_buf{
 	private:
 		basic_ptr<byte, U> buffer;
 		EncMetric_info<T> ei;
 		size_t siz, len;
-
-		V *mycast() noexcept { return static_cast<V*>(this);}
-		V &instance() noexcept { return *(mycast());}
-		const V *mycast() const noexcept { return static_cast<V const*>(this);}
-		const V &instance() const noexcept { return *(mycast());}
-	protected:
-		adv_string_buf_0(EncMetric_info<T> f, const U &alloc=U{}) : buffer{alloc}, ei{f}, siz{0}, len{0} {}
-		adv_string_buf_0(EncMetric_info<T> f, size_t indim, const U &alloc=U{}) : buffer{indim, alloc}, ei{f}, siz{0}, len{0} {}
 	public:
+		adv_string_buf(EncMetric_info<T> f, const U &alloc=U{}) : buffer{alloc}, ei{f}, siz{0}, len{0} {}
+		adv_string_buf(EncMetric_info<T> f, size_t siz, const U &alloc=U{}) : buffer{siz, alloc}, ei{f}, siz{0}, len{0} {}
+		adv_string_buf(adv_string_view<T> str, const U &alloc= U{}) : adv_string_buf{str.begin().raw_format(), str.size(), alloc} {
+			append_string(str);
+		}
+
 		size_t size() const noexcept { return siz;}
 		size_t length() const noexcept {return len;}
 		const byte *raw() {return buffer.memory;}
@@ -228,13 +232,13 @@ class adv_string_buf_0{
 		uint append_chr(const_tchar_pt<T>);
 		size_t append_chrs(const_tchar_pt<T>, size_t);
 		size_t append_string(adv_string_view<T>);
-		V &operator<<(const_tchar_pt<T> p){
+		adv_string_buf &operator<<(const_tchar_pt<T> p){
 			append_chr(p);
-			return instance();
+			return *this;
 		}
-		V &operator<<(adv_string_view<T> p){
+		adv_string_buf &operator<<(adv_string_view<T> p){
 			append_string(p);
-			return instance();
+			return *this;
 		}
 
 		/*
@@ -252,42 +256,35 @@ class adv_string_buf_0{
 		void clear() noexcept;
 		adv_string_view<T> view() const noexcept;
 		adv_string<T, U> move();
-		template<typename Alloc>
+		template<typename Alloc = std::pmr::polymorphic_allocator<byte>>
 		adv_string<T, Alloc> allocate(const Alloc & = Alloc{}) const;
 };
 
-template<typename T, typename U = std::allocator<byte>>
-class adv_string_buf : public adv_string_buf_0<T, adv_string_buf<T, U>, U>{
-	public:
-		adv_string_buf(EncMetric_info<T> f, const U & alloc = U{}) : adv_string_buf_0<T, adv_string_buf<T, U>, U>{f, alloc} {}
-		adv_string_buf(const U &alloc = U{}) : adv_string_buf{EncMetric_info<T>{}, alloc} {}
-		adv_string_buf(size_t indim, const U &alloc = U{}) : adv_string_buf{EncMetric_info<T>{}, indim, alloc} {}
-		adv_string_buf(adv_string_view<T> str, const U &alloc= U{}) : adv_string_buf{EncMetric_info<T>{}, alloc} {
-			append_string(str);
-		}
-};
+template<typename T, typename U = std::pmr::polymorphic_allocator<byte>, enable_not_wide_t<T, int> = 0>
+adv_string_buf<T> new_str_buf(const U &alloc = U{}){
+    return adv_string_buf<T>{EncMetric_info<T>{}, alloc};
+}
+template<typename T, typename U = std::pmr::polymorphic_allocator<byte>, enable_not_wide_t<T, int> = 0>
+adv_string_buf<T> new_str_buf(size_t siz, const U &alloc = U{}){
+    return adv_string_buf<T>{EncMetric_info<T>{}, siz, alloc};
+}
 
-template<typename tt, typename U>
-class adv_string_buf<WIDE<tt>, U> : public adv_string_buf_0<WIDE<tt>, adv_string_buf<WIDE<tt>, U>, U>{
-	public:
-		adv_string_buf(EncMetric_info<WIDE<tt>> f, const U & alloc = U{}) : adv_string_buf_0<WIDE<tt>, adv_string_buf<WIDE<tt>, U>, U>{f, alloc} {}
+template<typename T, typename U = std::pmr::polymorphic_allocator<byte>, enable_wide_t<T, int> = 0>
+adv_string_buf<T> new_str_buf(const EncMetric<typename T::ctype> *format, const U &alloc = U{}){
+    return adv_string_buf<T>{EncMetric_info<T>{format}, alloc};
+}
+template<typename T, typename U = std::pmr::polymorphic_allocator<byte>, enable_wide_t<T, int> = 0>
+adv_string_buf<T> new_str_buf(const EncMetric<typename T::ctype> *format, size_t siz, const U &alloc = U{}){
+    return adv_string_buf<T>{EncMetric_info<T>{format}, siz, alloc};
+}
 
-		adv_string_buf(const EncMetric<tt> *format, const U &alloc = U{}) : adv_string_buf{EncMetric_info<WIDE<tt>>{format}, alloc} {}
-		adv_string_buf(const EncMetric<tt> *format, size_t indim, const U &alloc = U{}) : adv_string_buf{EncMetric_info<WIDE<tt>>{format}, indim, alloc} {}
-		adv_string_buf(adv_string_view<WIDE<tt>> str, const U &alloc= U{}) : adv_string_buf{EncMetric_info<WIDE<tt>>{str.format()}, alloc} {
-			append_string(str);
-		}
-};
+template<typename T, typename U = std::pmr::polymorphic_allocator<byte>>
+adv_string_buf<T> new_str_buf(adv_string_view<T> str, const U &alloc= U{}){
+    return adv_string_buf<T>{str, alloc};
+}
 
-template<typename tt>
-class adv_string_buf<WIDE<tt>, std::allocator<byte>> : public adv_string_buf_0<WIDE<tt>, adv_string_buf<WIDE<tt>, std::allocator<byte>>, std::allocator<byte>>{
-	public:
-		adv_string_buf(EncMetric_info<WIDE<tt>> f, const std::allocator<byte> & alloc = std::allocator<byte>{}) : adv_string_buf_0<WIDE<tt>, adv_string_buf<WIDE<tt>, std::allocator<byte>>, std::allocator<byte>>{f, alloc} {}
 
-		adv_string_buf(const EncMetric<tt> *format, const std::allocator<byte> &alloc = std::allocator<byte>{}) : adv_string_buf{EncMetric_info<WIDE<tt>>{format}, alloc} {}
-};
-
-template<typename T, typename U = std::allocator<byte>>
+template<typename T, typename U = std::pmr::polymorphic_allocator<byte>>
 class adv_string : public adv_string_view<T>{
 	private:
 		basic_ptr<byte, U> bind;
@@ -311,8 +308,8 @@ class adv_string : public adv_string_view<T>{
 		static adv_string<T, U> newinstance(const_tchar_pt<T> p, const U &alloc = U{}){return newinstance_ter(p, zero_terminating<T>, alloc);}
 	template<typename S>
 	friend class adv_string_view;
-	template<typename S, typename V, typename R>
-	friend class adv_string_buf_0;
+	template<typename S, typename R>
+	friend class adv_string_buf;
 };
 
 template<typename S, typename T, typename U = std::allocator<byte>>

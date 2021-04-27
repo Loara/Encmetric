@@ -623,8 +623,8 @@ adv_string<T, U> adv_string_view<T>::concatenate(const adv_string_view<S> &err, 
 	return adv_string<T, U>{std::move(allocater), ptr, len+elen, siz+esiz};
 }
 //----------------------------------------------
-template<typename T, typename V, typename U>
-uint adv_string_buf_0<T, V, U>::append_chr(const_tchar_pt<T> ptr){
+template<typename T, typename U>
+uint adv_string_buf<T, U>::append_chr(const_tchar_pt<T> ptr){
 	uint chl = ptr.chLen();
 	const byte *dat = ptr.data();
 	append(buffer, siz, dat, chl);
@@ -633,8 +633,8 @@ uint adv_string_buf_0<T, V, U>::append_chr(const_tchar_pt<T> ptr){
 	return chl;
 }
 
-template<typename T, typename V, typename U>
-size_t adv_string_buf_0<T, V, U>::append_chrs(const_tchar_pt<T> ptr, size_t nchr){
+template<typename T, typename U>
+size_t adv_string_buf<T, U>::append_chrs(const_tchar_pt<T> ptr, size_t nchr){
 	size_t part = 0;
 	for(size_t i=0; i<nchr; i++){
 		part += append_chr(ptr);
@@ -643,8 +643,8 @@ size_t adv_string_buf_0<T, V, U>::append_chrs(const_tchar_pt<T> ptr, size_t nchr
 	return part;
 }
 
-template<typename T, typename V, typename U>
-size_t adv_string_buf_0<T, V, U>::append_string(adv_string_view<T> str){
+template<typename T, typename U>
+size_t adv_string_buf<T, U>::append_string(adv_string_view<T> str){
 	size_t ret = str.size();
 	const byte *ptr = str.data();
 	append(buffer, siz, ptr, ret);
@@ -653,8 +653,8 @@ size_t adv_string_buf_0<T, V, U>::append_string(adv_string_view<T> str){
 	return ret;
 } 
 
-template<typename T, typename V, typename U>
-bool adv_string_buf_0<T, V, U>::append_chr_v(const_tchar_pt<T> ptr, size_t siz){
+template<typename T, typename U>
+bool adv_string_buf<T, U>::append_chr_v(const_tchar_pt<T> ptr, size_t siz){
 	uint chlen;
 	if(!ptr.validChar(chlen))
 		return false;
@@ -667,8 +667,8 @@ bool adv_string_buf_0<T, V, U>::append_chr_v(const_tchar_pt<T> ptr, size_t siz){
 	return true;
 }
 
-template<typename T, typename V, typename U>
-bool adv_string_buf_0<T, V, U>::append_chrs_v(const_tchar_pt<T> ptr, size_t siz, size_t nchr){
+template<typename T, typename U>
+bool adv_string_buf<T, U>::append_chrs_v(const_tchar_pt<T> ptr, size_t siz, size_t nchr){
 	uint lbuf;
 	size_t siztotal=0;
 	const_tchar_pt<T> verify = ptr;
@@ -687,9 +687,9 @@ bool adv_string_buf_0<T, V, U>::append_chrs_v(const_tchar_pt<T> ptr, size_t siz,
 	return true;
 }
 
-template<typename T, typename V, typename U>
+template<typename T, typename U>
 template<typename S>
-size_t adv_string_buf_0<T, V, U>::append_string_c(adv_string_view<S> str){
+size_t adv_string_buf<T, U>::append_string_c(adv_string_view<S> str){
 	static_assert(std::is_same_v<typename T::ctype, typename S::ctype>, "Impossible to convert this string");
 	if(str.length() == 0)
 		return 0;
@@ -729,19 +729,19 @@ size_t adv_string_buf_0<T, V, U>::append_string_c(adv_string_view<S> str){
 	return return_r;
 }
 
-template<typename T, typename V, typename U>
-void adv_string_buf_0<T, V, U>::clear() noexcept{
+template<typename T, typename U>
+void adv_string_buf<T, U>::clear() noexcept{
 	siz=0;
 	len=0;
 }
 
-template<typename T, typename V, typename U>
-adv_string_view<T> adv_string_buf_0<T, V, U>::view() const noexcept{
+template<typename T, typename U>
+adv_string_view<T> adv_string_buf<T, U>::view() const noexcept{
 	return adv_string_view<T>{len, siz, const_tchar_pt<T>{buffer.memory, ei}};
 }
 
-template<typename T, typename V, typename U>
-adv_string<T, U> adv_string_buf_0<T, V, U>::move(){
+template<typename T, typename U>
+adv_string<T, U> adv_string_buf<T, U>::move(){
 	size_t l=len;
 	size_t s=siz;
 	basic_ptr<byte, U> to = std::move(buffer);
@@ -751,9 +751,9 @@ adv_string<T, U> adv_string_buf_0<T, V, U>::move(){
 	return adv_string<T, U>{const_tchar_pt<T>{nullptr, ei}, l, s, std::move(to), 0};
 }
 
-template<typename T, typename V, typename U>
+template<typename T, typename U>
 template<typename Alloc>
-adv_string<T, Alloc> adv_string_buf_0<T, V, U>::allocate(const Alloc &all) const{
+adv_string<T, Alloc> adv_string_buf<T, U>::allocate(const Alloc &all) const{
 	adv_string_view<T> rey{len, siz, const_tchar_pt<T>{buffer.memory, ei}};
 	return adv_string<T, Alloc>{rey, all};
 }

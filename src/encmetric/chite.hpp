@@ -162,19 +162,55 @@ class const_tchar_pt : public base_tchar_pt<T, const_tchar_pt<T>, byte const>{
 	public:
 		explicit const_tchar_pt(const byte *c, EncMetric_info<T> f) : base_tchar_pt<T, const_tchar_pt<T>, byte const>{c, f} {}
 
-		explicit const_tchar_pt(const byte *c) : const_tchar_pt{c, {}} {}
-		explicit const_tchar_pt(const char *c) : const_tchar_pt{reinterpret_cast<const byte *>(c), {}} {}
-		explicit const_tchar_pt(const char16_t *c) : const_tchar_pt{reinterpret_cast<const byte *>(c), {}} {}
-		explicit const_tchar_pt(const char32_t *c) : const_tchar_pt{reinterpret_cast<const byte *>(c), {}} {}
-
-		explicit const_tchar_pt() : const_tchar_pt{static_cast<const byte *>(nullptr), {}} {}
-
 		//bool terminate() const {return is_all_zero(this->ptr, this->ei.unity());}
         //No more required
 
 		const_tchar_pt new_instance(const byte *c) const{return const_tchar_pt<T>{c, this->ei};}
 		const_tchar_pt new_instance(const char *c) const{return const_tchar_pt<T>{reinterpret_cast<const byte *>(c), this->ei};}
 };
+
+template<typename T, enable_not_wide_t<T, int> =0>
+const_tchar_pt<T> new_const_tchar_pt(const byte *b)noexcept{
+    return const_tchar_pt<T>(b, EncMetric_info<T>{});
+}
+template<typename T, enable_not_wide_t<T, int> =0>
+const_tchar_pt<T> new_const_tchar_pt(const char *b)noexcept{
+    return const_tchar_pt<T>(reinterpret_cast<const byte *>(b), EncMetric_info<T>{});
+}
+template<typename T, enable_not_wide_t<T, int> =0>
+const_tchar_pt<T> new_const_tchar_pt(const char16_t *b)noexcept{
+    return const_tchar_pt<T>(reinterpret_cast<const byte *>(b), EncMetric_info<T>{});
+}
+template<typename T, enable_not_wide_t<T, int> =0>
+const_tchar_pt<T> new_const_tchar_pt(const char32_t *b)noexcept{
+    return const_tchar_pt<T>(reinterpret_cast<const byte *>(b), EncMetric_info<T>{});
+}
+template<typename T, enable_not_wide_t<T, int> =0>
+const_tchar_pt<T> new_const_tchar_pt()noexcept{
+    return const_tchar_pt<T>(nullptr, EncMetric_info<T>{});
+}
+
+template<typename T, enable_wide_t<T, int> =0>
+const_tchar_pt<T> new_const_tchar_pt(const byte *b, const EncMetric<typename T::ctype> *f)noexcept{
+    return const_tchar_pt<T>(b, EncMetric_info<T>{f});
+}
+template<typename T, enable_wide_t<T, int> =0>
+const_tchar_pt<T> new_const_tchar_pt(const char *b, const EncMetric<typename T::ctype> *f)noexcept{
+    return const_tchar_pt<T>(reinterpret_cast<const byte *>(b), EncMetric_info<T>{f});
+}
+template<typename T, enable_wide_t<T, int> =0>
+const_tchar_pt<T> new_const_tchar_pt(const char16_t *b, const EncMetric<typename T::ctype> *f)noexcept{
+    return const_tchar_pt<T>(reinterpret_cast<const byte *>(b), EncMetric_info<T>{f});
+}
+template<typename T, enable_wide_t<T, int> =0>
+const_tchar_pt<T> new_const_tchar_pt(const char32_t *b, const EncMetric<typename T::ctype> *f)noexcept{
+    return const_tchar_pt<T>(reinterpret_cast<const byte *>(b), EncMetric_info<T>{f});
+}
+template<typename T, enable_wide_t<T, int> =0>
+const_tchar_pt<T> new_const_tchar_pt(const EncMetric<typename T::ctype> *f)noexcept{
+    return const_tchar_pt<T>(nullptr, EncMetric_info<T>{f});
+}
+/*
 template<typename tt>
 class const_tchar_pt<WIDE<tt>> : public base_tchar_pt<WIDE<tt>, const_tchar_pt<WIDE<tt>>, byte const>{
 	public:
@@ -192,26 +228,65 @@ class const_tchar_pt<WIDE<tt>> : public base_tchar_pt<WIDE<tt>, const_tchar_pt<W
 		const_tchar_pt new_instance(const byte *c) const{return const_tchar_pt<WIDE<tt>>{c, this->ei};}
 		const_tchar_pt new_instance(const char *c) const{return const_tchar_pt<WIDE<tt>>{reinterpret_cast<const byte*>(c), this->ei};}
 };
+*/
 
 template<typename T>
 class tchar_pt : public wbase_tchar_pt<T, tchar_pt<T>>{
 	public:
 		explicit tchar_pt(byte *c, EncMetric_info<T> f) : wbase_tchar_pt<T, tchar_pt<T>>{c, f} {}
 
-		explicit tchar_pt(byte *c) : wbase_tchar_pt<T, tchar_pt<T>>{c, {}} {}
-		explicit tchar_pt(char *c) : tchar_pt{reinterpret_cast<byte *>(c), {}} {}
-		explicit tchar_pt(char16_t *c) : tchar_pt{reinterpret_cast<byte *>(c), {}} {}
-		explicit tchar_pt(char32_t *c) : tchar_pt{reinterpret_cast<byte *>(c), {}} {}
-
-		explicit tchar_pt() : tchar_pt{static_cast<byte *>(nullptr), {}} {}
-
 		//bool terminate() const {return is_all_zero(this->ptr, this->ei.unity());}
 		const_tchar_pt<T> cast() const noexcept{ return const_tchar_pt<T>{this->ptr, this->ei};}
+		operator const_tchar_pt<T>() const noexcept{ return cast();}
 
 		tchar_pt new_instance(byte *c) const{return tchar_pt<T>{c, this->ei};}
 		tchar_pt new_instance(char *c) const{return tchar_pt<T>{reinterpret_cast<byte *>(c), this->ei};}
 };
 
+
+
+template<typename T, enable_not_wide_t<T, int> =0>
+tchar_pt<T> new_tchar_pt(byte *b)noexcept{
+    return tchar_pt<T>(b, EncMetric_info<T>{});
+}
+template<typename T, enable_not_wide_t<T, int> =0>
+tchar_pt<T> new_tchar_pt(char *b)noexcept{
+    return tchar_pt<T>(reinterpret_cast<byte *>(b), EncMetric_info<T>{});
+}
+template<typename T, enable_not_wide_t<T, int> =0>
+tchar_pt<T> new_tchar_pt(char16_t *b)noexcept{
+    return tchar_pt<T>(reinterpret_cast<byte *>(b), EncMetric_info<T>{});
+}
+template<typename T, enable_not_wide_t<T, int> =0>
+tchar_pt<T> new_tchar_pt(char32_t *b)noexcept{
+    return tchar_pt<T>(reinterpret_cast<byte *>(b), EncMetric_info<T>{});
+}
+template<typename T, enable_not_wide_t<T, int> =0>
+tchar_pt<T> new_tchar_pt()noexcept{
+    return tchar_pt<T>(nullptr, EncMetric_info<T>{});
+}
+
+template<typename T, enable_wide_t<T, int> =0>
+tchar_pt<T> new_tchar_pt(byte *b, const EncMetric<typename T::ctype> *f)noexcept{
+    return tchar_pt<T>(b, EncMetric_info<T>{f});
+}
+template<typename T, enable_wide_t<T, int> =0>
+tchar_pt<T> new_tchar_pt(char *b, const EncMetric<typename T::ctype> *f)noexcept{
+    return tchar_pt<T>(reinterpret_cast<byte *>(b), EncMetric_info<T>{f});
+}
+template<typename T, enable_wide_t<T, int> =0>
+tchar_pt<T> new_tchar_pt(char16_t *b, const EncMetric<typename T::ctype> *f)noexcept{
+    return tchar_pt<T>(reinterpret_cast<byte *>(b), EncMetric_info<T>{f});
+}
+template<typename T, enable_wide_t<T, int> =0>
+tchar_pt<T> new_tchar_pt(char32_t *b, const EncMetric<typename T::ctype> *f)noexcept{
+    return tchar_pt<T>(reinterpret_cast<byte *>(b), EncMetric_info<T>{f});
+}
+template<typename T, enable_wide_t<T, int> =0>
+tchar_pt<T> new_tchar_pt(const EncMetric<typename T::ctype> *f)noexcept{
+    return tchar_pt<T>(nullptr, EncMetric_info<T>{f});
+}
+/*
 template<typename tt>
 class tchar_pt<WIDE<tt>> : public wbase_tchar_pt<WIDE<tt>, tchar_pt<WIDE<tt>>>{
 	public:
@@ -230,6 +305,7 @@ class tchar_pt<WIDE<tt>> : public wbase_tchar_pt<WIDE<tt>, tchar_pt<WIDE<tt>>>{
 		tchar_pt new_instance(byte *c) const{return tchar_pt<WIDE<tt>>{c, this->ei};}
 		tchar_pt new_instance(char *c) const{return tchar_pt<WIDE<tt>>{reinterpret_cast<byte *>(c), this->ei};}
 };
+*/
 //---------------------------------------------
 
 /*
@@ -244,9 +320,11 @@ class tchar_relative{
         using ctype = typename T::ctype;
         tchar_relative(const tchar_pt<T> &fr, std::ptrdiff_t t = 0) : ptr{fr}, dif{t} {}
         tchar_relative(tchar_pt<T> &&, std::ptrdiff_t = 0) =delete;
+
         byte *data() const {return ptr.data() + dif;}
         std::ptrdiff_t difff() const noexcept {return dif;}
 		EncMetric_info<T> raw_format() const noexcept{ return ptr.raw_format();}
+
 		uint unity() const noexcept {return raw_format().unity();}
 		bool has_max() const noexcept {return raw_format().has_max();}
 		uint max_bytes() const noexcept {return raw_format().max_bytes();}
@@ -309,9 +387,9 @@ const_tchar_pt<S> reassign(const_tchar_pt<T> p);
     Assign an encoding to a RAW character pointer
 */
 template<typename tt>
-inline tchar_pt<WIDE<tt>> assign(tchar_pt<RAW<tt>> r, const EncMetric<tt> &f) noexcept {return tchar_pt<WIDE<tt>>{r.data(), f};}
+inline tchar_pt<WIDE<tt>> set_encoding(tchar_pt<RAW<tt>> r, const EncMetric<tt> &f) noexcept {return tchar_pt<WIDE<tt>>{r.data(), f};}
 template<typename tt>
-inline const_tchar_pt<WIDE<tt>> assign(const_tchar_pt<RAW<tt>> r, const EncMetric<tt> &f) noexcept {return const_tchar_pt<WIDE<tt>>{r.data(), f};}
+inline const_tchar_pt<WIDE<tt>> set_encoding(const_tchar_pt<RAW<tt>> r, const EncMetric<tt> &f) noexcept {return const_tchar_pt<WIDE<tt>>{r.data(), f};}
 
 /*
     Make an encoding conversion between Unicode-compatible encodings using from_unicode and to_unicode functions.

@@ -46,19 +46,19 @@ using astr_d = adv_string<CENC, U>;
 using astr = astr_d<>;
 
 inline astr_view getstring(const char *c){
-	return astr_view{c_achar_pt{c}};
+	return new_str_view<CENC>(c);
 }
 
 inline astr_view getstring(const char *c, size_t len){
-	return astr_view{c_achar_pt{c}, len, false};
+	return new_str_view<CENC>(c, len, meas::length);
 }
 
 inline adv_string_view<UTF16<bend>> getstring_16(const char16_t *c){
-	return adv_string_view<UTF16<bend>>{const_tchar_pt<UTF16<bend>>{(const byte *)c}};
+	return new_str_view<UTF16<bend>>(c);
 }
 
 inline adv_string_view<UTF16<bend>> getstring_16(const char16_t *c, size_t len){
-	return adv_string_view<UTF16<bend>>{const_tchar_pt<UTF16<bend>>{(const byte *)c}, len*2, false};
+	return new_str_view<UTF16<bend>>(c, len*2, meas::length);
 
 
 }
@@ -85,17 +85,17 @@ inline const EncMetric<unicode> *detect_bom(adv_string_view<RAW<unicode>> t){
 inline namespace literals{
 inline namespace astr_literals{
 inline const byte * operator"" _raw(const char *c, std::size_t){
-	return (const byte *)c;
+	return reinterpret_cast<const byte *>(c);
 }
 
 inline astr_view operator"" _asv(const char *b, std::size_t st){
-	return astr_view{b, st, meas::size};
+	return new_str_view<CENC>(b, st, meas::size);
 }
 inline adv_string_view<UTF16<bend>> operator"" _asv(const char16_t *b, std::size_t st){
-	return adv_string_view<UTF16<bend>>{(const byte *)b, st * 2, meas::size};
+	return new_str_view<UTF16<bend>>(b, st * 2, meas::size);
 }
 inline adv_string_view<UTF32<bend>> operator"" _asv(const char32_t *b, std::size_t st){
-	return adv_string_view<UTF32<bend>>{(const byte *)b, st * 4, meas::size};
+	return new_str_view<UTF32<bend>>(b, st * 4, meas::size);
 }
 
 }
