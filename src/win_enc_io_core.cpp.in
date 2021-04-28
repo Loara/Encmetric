@@ -7,19 +7,19 @@ using namespace adv;
 size_t adv::raw_stdin_readbytes(byte *b, size_t siz){
 	DWORD y;
 	if(ReadConsoleW(GetStdHandle(STD_INPUT_HANDLE), b, static_cast<DWORD>(siz/2), &y, NULL) == 0)
-		return 0;
+		throw IOException{};
 	return 2*y;
 }
 size_t adv::raw_stdout_writebytes(const byte *b, size_t siz){
 	DWORD y;
 	if(WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), b, static_cast<DWORD>(siz/2), &y, NULL) == 0)
-		return 0;
+		throw IOException{};
 	return 2*y;
 }
 size_t adv::raw_stderr_writebytes(const byte *b, size_t siz){
 	DWORD y;
 	if(WriteConsoleW(GetStdHandle(STD_ERROR_HANDLE), b, static_cast<DWORD>(siz/2), &y, NULL) == 0)
-		return 0;
+		throw IOException{};
 	return 2*y;
 }
 

@@ -17,8 +17,15 @@
     along with Encmetric. If not, see <http://www.gnu.org/licenses/>.
 */
 #include <encmetric/byte_tools.hpp>
+#include <exception>
 
 namespace adv{
+
+class IOException : public std::exception{
+    public:
+        IOException() {}
+        const char *what() const noexcept {return "IO error";}
+};
 
 size_t raw_stdin_readbytes(byte *, size_t);
 size_t raw_stdout_writebytes(const byte *, size_t);
