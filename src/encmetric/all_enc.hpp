@@ -21,3 +21,4 @@
 #include <encmetric/utf32_enc.hpp>
 #include <encmetric/iso8859_enc.hpp>
 #include <encmetric/win_codepages.hpp>
+#include <encmetric/base64.hpp>

@@ -6,6 +6,17 @@ project(encmetric VERSION 1.2 DESCRIPTION "Library to manage encoded strings" LA
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+#encoding detector
+#
+#if you are cross compiling then you cannot run the compiled command, so you have to find another way to add the selected header
+if(NOT CMAKE_CROSSCOMPILING)
+add_executable(detector detector.cpp)
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/encmetric/config_enc.hpp
+    COMMAND detector ${CMAKE_CURRENT_BINARY_DIR}/encmetric/config_enc.hpp
+    DEPENDS detector
+    )
+endif()
+
 #windows test
 if(CMAKE_SYSTEM_NAME MATCHES Win)
 	set(using_windows ON)
@@ -21,7 +32,19 @@ configure_file(encmetric/config.hpp.in encmetric/config.hpp)
 file(GLOB headers LIST_DIRECTORIES false "encmetric/*.hpp")
 file(GLOB t_headers LIST_DIRECTORIES false "encmetric/*.tpp")
 
-add_library(encmetric encoding.cpp utf8_enc.cpp enc_c.cpp utf32_enc.cpp utf16_enc.cpp iso8859_enc.cpp win_codepages.cpp enc_io.cpp enc_io_core.cpp base64.cpp)
+add_library(encmetric
+    ${CMAKE_CURRENT_BINARY_DIR}/encmetric/config_enc.hpp
+    encoding.cpp
+    utf8_enc.cpp
+    enc_c.cpp
+    utf32_enc.cpp
+    utf16_enc.cpp
+    iso8859_enc.cpp
+    win_codepages.cpp
+    enc_io.cpp
+    enc_io_core.cpp
+    base64.cpp
+    )
 
 #headers
 target_include_directories(encmetric PUBLIC "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")
@@ -31,6 +54,7 @@ install(TARGETS encmetric DESTINATION lib)
 install(FILES ${headers} ${t_headers} DESTINATION include/encmetric)
 install(FILES "encmetric.hpp" DESTINATION include)
 install(FILES "${PROJECT_BINARY_DIR}/encmetric/config.hpp" DESTINATION include/encmetric)
+install(FILES "${PROJECT_BINARY_DIR}/encmetric/config_enc.hpp" DESTINATION include/encmetric)
 
 #optional testing
 option(BUILD_TEST "Building test program" OFF)

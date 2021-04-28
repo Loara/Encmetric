@@ -31,9 +31,9 @@ using IOenc = std::conditional_t<is_windows(), UTF16<false>, UTF8>;
 using iochar_pt = tchar_pt<IOenc>;
 using c_iochar_pt = const_tchar_pt<IOenc>;
 using iostr_view = adv_string_view<IOenc>;
-template<typename U = std::allocator<byte>>
+template<typename U>
 using iostr_d = adv_string<IOenc, U>;
-using iostr = iostr_d<>;
+using iostr = iostr_d<std::pmr::polymorphic_allocator<byte>>;
 
 /*
  * Read/write up to n characters (not n bytes)
